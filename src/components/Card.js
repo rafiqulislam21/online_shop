@@ -1,14 +1,23 @@
-import React from 'react';
+import React, { useState, useEffect, useContext} from 'react';
 import '../App.css';
 import { Link } from 'react-router-dom';
+import { CartContext } from "../contexts/CartContext";
 
 
-function Card(props) {
-
-    const addToCart = e => {
+const Card = (props) => {
+    const [selectedProducts, setSelectedProducts] = useContext(CartContext);
+    // const addToCart = e => {
+    //     e.preventDefault();
+    //     console.log("item added to cart");
+    // }
+    const addToCart = param => e => {
         e.preventDefault();
-        console.log("item added to cart");
-    }
+        console.log("============"+param.name);
+        setSelectedProducts((prevSelectedProducts) => [
+          ...prevSelectedProducts,
+           param ,
+        ]);
+    };
     
 
     return (
@@ -23,7 +32,7 @@ function Card(props) {
                     <p className="card-subtitle mb-2 text-muted">Rating: {props.value.rating}<i className="bi bi-star"></i></p>
                     <div className="text-center">
                         <Link className="btn btn-outline-primary mx-1" to={`/shop/${props.value.id}`}>Details</Link>
-                        <button onClick={addToCart} type="button" className="btn btn-outline-warning mx-1" data-bs-toggle="tooltip" data-bs-html="true" title="add to cart">
+                        <button onClick={addToCart(props.value)} type="button" className="btn btn-outline-warning mx-1" data-bs-toggle="tooltip" data-bs-html="true" title="add to cart">
                             <i className="bi bi-cart-plus"></i>
                         </button>
                     </div>

@@ -7,7 +7,7 @@ function Cart() {
   useEffect(() => {
     fetchItems();
     calculateTotal();
-  }, []);
+  });
 
   const [selectedProducts, setSelectedProducts] = useContext(CartContext);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -29,20 +29,37 @@ function Cart() {
     return total;
   }
 
+  function cearAll() {
+    setSelectedProducts([]);
+  }
+
 
   return (
     <div className="container">
       <h3 className="text-muted py-4">Selected products</h3>
       <div className="container px-5">
 
-        {/* selected product list here */}
-        {selectedProducts.map(item => (
+        {/* selected product list here ======*/}
+        {/* {selectedProducts.map(item => (
           <CardHorizontal
             key={item.id}
             value={item}
           />
-        ))}
-
+        ))} */}
+        {
+          (!selectedProducts.length) 
+          ? <h1 className="display-4 text-muted text-center">Empty cart!</h1>
+          : selectedProducts.map(function (item, index) {
+            return (
+              <CardHorizontal
+                key={index}
+                value={item}
+              />
+            )
+          })
+        
+        
+        }
 
         <div className="card mt-3">
           <ul className="list-group list-group-flush">
@@ -52,7 +69,11 @@ function Cart() {
             </li>
             <li className="list-group-item d-flex justify-content-between align-items-center flex-wrap">
               <h6 className="mb-0"></h6>
-              <button type="button" className="btn btn-danger btn-lg">place order</button>
+              <span>
+                <button onClick={cearAll} type="button" className="btn btn-danger btn-lg ">clear all</button>&nbsp;&nbsp;&nbsp;&nbsp;
+                <button type="button" className="btn btn-success btn-lg">place order</button>
+              </span>
+              
             </li>
           </ul>
         </div>

@@ -1,14 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import '../App.css';
 import { Link } from 'react-router-dom';
-
+import { CartContext } from "../contexts/CartContext";
 
 function CardHorizontal(props) {
-    
-    const removeFromCart = e => {
+  const [selectedProducts, setSelectedProducts] = useContext(CartContext);
+    // const removeFromCart = e => {
+    //     e.preventDefault();
+    //     console.log("item removed from cart");
+    //   }
+      const removeFromCart = param => e => {
         e.preventDefault();
-        console.log("item removed from cart");
-      }
+        console.log("============"+param.name);
+        const newList = selectedProducts.filter((item) => item.id !== param.id);
+        setSelectedProducts(newList);
+    };
 
     return (
         <div className="alert alert-light alert-dismissible shadow rounded" role="alert">
@@ -21,7 +27,7 @@ function CardHorizontal(props) {
               <p className="card-text minimal-text m-0">{props.value.description}</p>
               <p className="card-subtitle m-0 text-muted">Category: {props.value.category.name}</p>
               <p className="card-subtitle m-0 text-muted">Price: {props.value.price}<i className="bi bi-currency-euro"></i></p>
-              <button onClick={removeFromCart} type="button" className="btn-close" aria-label="Close"></button>
+              <button onClick={removeFromCart(props.value)} type="button" className="btn-close" aria-label="Close"></button>
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext} from 'react';
 import Review from '../components/Review';
 import RatingStar from '../components/RatingStar';
 import { ProductContext } from "../contexts/ProductContext";
+import { CartContext } from "../contexts/CartContext";
 
 import '../App.css';
 
@@ -11,6 +12,22 @@ function ProductDetail() {
   }, []);
 
   const [product, setProduct] = useContext(ProductContext);
+  const [selectedProducts, setSelectedProducts] = useContext(CartContext);
+  const [reviewTxt, setReviewTxt] = useState("");
+  const [reviewStr, setReviewStr] = useState(5);
+
+  const updateReviewTxt = (e) => {
+    setReviewTxt(e.target.value);
+    // console.log(e.target.value);
+  };
+  const updateReviewStr = (e) => {
+    setReviewStr(e.target.value);
+  };
+  const resetFun = () => {
+    setReviewTxt("");
+    setReviewStr(5);
+  }
+
   const fetchItems = async () => {
     // const data = await fetch('https://fortnite-api.theapinetwork.com/upcoming/get');
 
@@ -18,11 +35,14 @@ function ProductDetail() {
     // console.log(items.data);
     // setItems(items.data);
   }
-
-  const addToCart = e => {
-    e.preventDefault();
-    console.log("item added to cart from details");
-  }
+    const addToCart = param => e => {
+        e.preventDefault();
+        console.log("============"+param.name);
+        setSelectedProducts((prevSelectedProducts) => [
+          ...prevSelectedProducts,
+           param ,
+        ]);
+    };
 
   return (
     <div className="container pt-4">
@@ -47,7 +67,7 @@ function ProductDetail() {
             </div>
             <div className="col-8">
               <div className="row px-3">
-                <button onClick={addToCart} type="button" className="btn btn-success mx-1" data-bs-toggle="tooltip" data-bs-html="true" title="add to cart">
+                <button onClick={addToCart(product)} type="button" className="btn btn-success mx-1" data-bs-toggle="tooltip" data-bs-html="true" title="add to cart">
                   <i className="bi bi-cart-plus"></i> add to cart
                 </button>
               </div>
@@ -69,7 +89,15 @@ function ProductDetail() {
           <br></br>
           
           <div className="form-floating">
-            <textarea className="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style={{ height: '100px' }} required></textarea>
+            <textarea className="form-control" 
+              placeholder="Leave a comment here" 
+              id="floatingTextarea2"
+              name="reviewTxt"
+              value={reviewTxt}
+              onChange={updateReviewTxt} 
+              style={{ height: '100px' }} 
+              required>
+            </textarea>
             <label for="floatingTextarea2">Write review here....</label>
           </div>
         </div>
@@ -77,7 +105,7 @@ function ProductDetail() {
           <div className="row justify-content-between">
             <div className="col"></div>
             <div className="btn-group col" role="group" aria-label="Basic mixed styles example">
-              <button type="reset" className="btn btn-outline-danger">Cancel</button>
+              <button onClick={resetFun} type="reset" className="btn btn-outline-danger">Cancel</button>
               <button type="submit" className="btn btn-primary">Submit</button>
             </div>
           </div>
