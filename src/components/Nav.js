@@ -1,10 +1,13 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import '../App.css';
 import { Link } from 'react-router-dom';
+import { CartContext } from "../contexts/CartContext";
 
 function Nav() {
+  const [selectedProducts, setSelectedProducts] = useContext(CartContext);
+
   return (
-    
+  
     <nav className="navbar sticky-top navbar-expand-lg navbar-light bg-light">
       <div className="container">
         <Link className="navbar-brand text-primary" to="/">
@@ -36,7 +39,7 @@ function Nav() {
               <button type="button" className="btn btn-outline-warning btn-sm position-relative">
                 Cart <i className="bi bi-minecart-loaded"></i>
                 <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                  5+
+                  {selectedProducts.length}
                   <span className="visually-hidden">items</span>
                 </span>
               </button>

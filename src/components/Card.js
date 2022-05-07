@@ -9,6 +9,7 @@ function Card(props) {
         e.preventDefault();
         console.log("item added to cart");
     }
+    
 
     return (
         <div className="col">
@@ -17,7 +18,7 @@ function Card(props) {
                 <div className="card-body">
                     <h5 className="card-title">{props.value.name}</h5>
                     <p className="card-text minimal-text">{props.value.description}</p>
-                    <p className="card-subtitle mb-2 text-muted">Category: {props.value.description}</p>
+                    <p className="card-subtitle mb-2 text-muted">Category: {props.value.category.name}</p>
                     <p className="card-subtitle mb-2 text-muted">Price: {props.value.price}<i className="bi bi-currency-euro"></i></p>
                     <p className="card-subtitle mb-2 text-muted">Rating: {props.value.rating}<i className="bi bi-star"></i></p>
                     <div className="text-center">

@@ -17,10 +17,10 @@ function CardHorizontal(props) {
               <img src="https://via.placeholder.com/300.png/09f/fff" width="100" className="img-thumbnail" alt=""></img>
             </div>
             <div className="col-8 col-sm-8 col-md-10">
-              <strong>Product name</strong>
-              <p className="card-text minimal-text m-0">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p>
-              <p className="card-subtitle m-0 text-muted">Category: Electronies</p>
-              <p className="card-subtitle m-0 text-muted">Price: 300<i className="bi bi-currency-euro"></i></p>
+              <strong>{props.value.name}</strong>
+              <p className="card-text minimal-text m-0">{props.value.description}</p>
+              <p className="card-subtitle m-0 text-muted">Category: {props.value.category.name}</p>
+              <p className="card-subtitle m-0 text-muted">Price: {props.value.price}<i className="bi bi-currency-euro"></i></p>
               <button onClick={removeFromCart} type="button" className="btn-close" aria-label="Close"></button>
             </div>
           </div>

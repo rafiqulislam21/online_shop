@@ -35,7 +35,7 @@ function Review(props) {
                   ratingVal = {4.0}
                 />
                   <div className="form-floating">
-                    <textarea className="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style={{ height: '100px' }}></textarea>
+                    <textarea value={props.value.description} className="form-control" placeholder="Leave a comment here" id="floatingTextarea2" style={{ height: '100px' }}></textarea>
                     <label for="floatingTextarea2">Write review here....</label>
                   </div>
                 </div>

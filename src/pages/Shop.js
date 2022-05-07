@@ -9,6 +9,7 @@ function Shop() {
   useEffect(() => {
     fetchItems();
   }, []);
+  
 
   const [products, setProducts] = useContext(ShopContext);
   const fetchItems = async () => {
