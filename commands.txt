@@ -1,0 +1,13 @@
+commands:
+python -m venv venv
+.\venv\Scripts\activate
+
+packages:
+pip install flask
+pip install -U Flask-SQLAlchemy
+pip install -U sqlalchemy
+pip install pandas Faker mysqlclient
+
+pip install flask_serialize
+
+pip freeze > requirements.txt
