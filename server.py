@@ -1,132 +1,25 @@
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from logging.config import dictConfig
-from datetime import datetime
-
+import pymongo
 
 import pandas as pd
 from faker import Faker
 from collections import defaultdict
+from config import *
+from migration import *
+from mysql_connector import *
 
 app = Flask(__name__)
 
-# connection to database
-connection = app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:''@localhost/online_shop_db'
+# connection to mysql database
+connection = app.config['SQLALCHEMY_DATABASE_URI'] = mysql_connection_string
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
 
-# ======================models start======================================
+# connection to mongodb database
 
-
-class UserRole(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    role = db.Column(db.String(80), nullable=False)
-    users = db.relationship('User', backref='user_role',
-                            cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<UserRole "{self.role}">'
-
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    first_name = db.Column(db.String(80), nullable=True)
-    last_name = db.Column(db.String(80), nullable=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    phone_no = db.Column(db.String(80), unique=True, nullable=False)
-
-    user_role_id = db.Column(
-        db.Integer, db.ForeignKey("user_role.id"), nullable=False)
-    reviews = db.relationship('Review', backref='user',
-                              cascade="all, delete-orphan")
-    orders = db.relationship('Order', backref='user',
-                             cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<User "{self.first_name}">'
-
-
-class Category(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(80), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-
-    products = db.relationship(
-        'Product', backref='category', cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<Category "{self.name}">'
-
-
-class ProductOrder(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    product_id = db.Column(db.ForeignKey('product.id'))
-    order_id = db.Column(db.ForeignKey('order.id'))
-    amount = db.Column(db.Integer, nullable=False, default=0)
-
-    def __repr__(self):
-        return f'<ProductOrder "{self.product_id}-{self.order_id}">'
-
-
-class Product(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(80), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-    price = db.Column(db.Integer, nullable=False, default=0)
-    is_active = db.Column(db.Boolean, nullable=False, default=True)
-    created_date = db.Column(db.DateTime, nullable=False, default=datetime.now)
-
-    reviews = db.relationship(
-        'Review', backref='product', cascade="all, delete-orphan")
-    brand_id = db.Column(db.Integer, db.ForeignKey("brand.id"), nullable=False)
-    category_id = db.Column(db.Integer, db.ForeignKey(
-        "category.id"), nullable=False)
-    orders = db.relationship(
-        'ProductOrder', backref='product', cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<Product "{self.name}">'
-
-
-class Review(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    description = db.Column(db.Text, nullable=False)
-    rating = db.Column(db.Float, nullable=False, default=0.0)
-    created_date = db.Column(db.DateTime, nullable=False, default=datetime.now)
-
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey(
-        "product.id"), nullable=False)
-
-    def __repr__(self):
-        return f'<Review "{self.description}">'
-
-
-class Brand(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(80), nullable=False)
-    description = db.Column(db.Text, nullable=False)
-
-    products = db.relationship(
-        'Product', backref='brand', cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<Brand "{self.name}">'
-
-
-class Order(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    status = db.Column(db.String(80), nullable=False, default="pending")
-    created_date = db.Column(db.DateTime, nullable=False, default=datetime.now)
-
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    products = db.relationship(
-        'ProductOrder', backref='order', cascade="all, delete-orphan")
-
-    def __repr__(self):
-        return f'<Order "{self.status}">'
-# ======================models end======================================
-
+mongo_client = pymongo.MongoClient(mongo_connection_string)
+mongo_db = mongo_client['online_shop_db']
 
 # ======================generate random data api start====================================
 
@@ -773,8 +666,36 @@ def orderDelete(id):
     return responseJson
 # =============================api end================================
 
+# ======================data migration start======================================
+
+@app.route('/migrate')
+def migrate_data():    
+    migrate(db, mongo_db)
+
+    responseJson = {
+        "response": {
+            "status": 1,
+            "message": "Migration is finnished!!!!"
+        }
+    }
+    return responseJson
+
+@app.route('/clear-mongodb')
+def clear_mongodb():
+    reset_mongo_db(mongo_db)
+
+    responseJson = {
+        "response": {
+            "status": 1,
+            "message": "MongoDB is cleared!!!!"
+        }
+    }
+    return responseJson
+# ======================data migration end======================================
 
 # ---------------main----------------
 if __name__ == '__main__':
-    db.create_all()
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
