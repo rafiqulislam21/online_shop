@@ -9,5 +9,6 @@ pip install -U sqlalchemy
 pip install pandas Faker mysqlclient
 
 pip install flask_serialize
+pip install pymongo[srv]
 
 pip freeze > requirements.txt
