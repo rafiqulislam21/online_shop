@@ -44,6 +44,9 @@ class Category(db.Model):
 
     products = db.relationship(
         'Product', backref='category', cascade="all, delete-orphan")
+    
+    child_id = db.Column(db.Integer, db.ForeignKey('category.id'))
+    children = db.relation('Category', remote_side=[id], uselist=True)
 
     def __repr__(self):
         return f'<Category "{self.name}">'

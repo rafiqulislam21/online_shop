@@ -1,0 +1,41 @@
+.carousel-item{
+  height: 450px;
+} 
+.carousel-item img{
+  height: 450px;
+}
+.card-img-top{
+  height: 250px;
+}
+.fit-image{
+  width: 100%;
+  object-fit: cover;
+  height: 400px;
+}
+
+.minimal-text{
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.right-align {
+  float: right
+}
+
+/* rating start css here----- */
+.on {
+  color: rgb(252, 194, 4);
+  background-color: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+.off {
+  color: #ccc;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+/* rating start css here----- */
