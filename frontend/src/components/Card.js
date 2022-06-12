@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useContext} from 'react';
+import React, {useContext} from 'react';
 import '../App.css';
 import { Link } from 'react-router-dom';
 import { CartContext } from "../contexts/CartContext";
-
 
 const Card = (props) => {
     const [selectedProducts, setSelectedProducts] = useContext(CartContext);
@@ -18,6 +17,23 @@ const Card = (props) => {
            param ,
         ]);
     };
+
+    const itemAvailable = param => async () => {
+        var productId = props.value.id
+        fetch(`http://localhost:5000/api/products/${productId}/available`)
+          .then(res => res.json())
+          .then(
+            (jsonResponse) => {
+                ///todo here--------------------------------
+                if (jsonResponse.response.is_available == true){
+                    alert("Available");
+                    addToCart(param)
+                }else{
+                    alert(jsonResponse.response.message);
+                }
+            }
+          )
+      }
     
 
     return (
@@ -27,12 +43,12 @@ const Card = (props) => {
                 <div className="card-body">
                     <h5 className="card-title">{props.value.name}</h5>
                     <p className="card-text minimal-text">{props.value.description}</p>
-                    <p className="card-subtitle mb-2 text-muted">Category: {props.value.category.name}</p>
+                    {/* <p className="card-subtitle mb-2 text-muted">Category: {props.value.category.name}</p> */}
                     <p className="card-subtitle mb-2 text-muted">Price: {props.value.price}<i className="bi bi-currency-euro"></i></p>
                     <p className="card-subtitle mb-2 text-muted">Rating: {props.value.rating}<i className="bi bi-star"></i></p>
                     <div className="text-center">
                         <Link className="btn btn-outline-primary mx-1" to={`/shop/${props.value.id}`}>Details</Link>
-                        <button onClick={addToCart(props.value)} type="button" className="btn btn-outline-warning mx-1" data-bs-toggle="tooltip" data-bs-html="true" title="add to cart">
+                        <button onClick={itemAvailable(props.value)} type="button" className="btn btn-outline-warning mx-1" data-bs-toggle="tooltip" data-bs-html="true" title="add to cart">
                             <i className="bi bi-cart-plus"></i>
                         </button>
                     </div>

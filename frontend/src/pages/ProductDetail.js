@@ -1,48 +1,109 @@
-import React, { useState, useEffect, useContext} from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useParams } from "react-router-dom";
 import Review from '../components/Review';
-import RatingStar from '../components/RatingStar';
+import ReactStars from "react-rating-stars-component";
 import { ProductContext } from "../contexts/ProductContext";
 import { CartContext } from "../contexts/CartContext";
 
 import '../App.css';
 
 function ProductDetail() {
-  useEffect(() => {
-    fetchItems();
-  }, []);
-
+  const { id } = useParams();
   const [product, setProduct] = useContext(ProductContext);
   const [selectedProducts, setSelectedProducts] = useContext(CartContext);
   const [reviewTxt, setReviewTxt] = useState("");
-  const [reviewStr, setReviewStr] = useState(5);
+  const [reviewStr, setReviewStr] = useState(0);
+  const [error, setError] = useState(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
 
   const updateReviewTxt = (e) => {
     setReviewTxt(e.target.value);
     // console.log(e.target.value);
   };
-  const updateReviewStr = (e) => {
-    setReviewStr(e.target.value);
-  };
   const resetFun = () => {
     setReviewTxt("");
-    setReviewStr(5);
+    setReviewStr(0);
   }
+  const ratingChanged = (newRating) => {
+    setReviewStr(newRating);
+    console.log(newRating);
+  };
 
   const fetchItems = async () => {
-    // const data = await fetch('https://fortnite-api.theapinetwork.com/upcoming/get');
-
-    // const items = await data.json();
-    // console.log(items.data);
-    // setItems(items.data);
+    fetch('http://localhost:5000/api/products/' + id)
+      .then(res => res.json())
+      .then(
+        (jsonResponse) => {
+          setIsLoaded(true);
+          console.log(jsonResponse);
+          setProduct(jsonResponse.response.product);
+        },
+        (error) => {
+          setIsLoaded(true);
+          setError(error);
+        }
+      )
   }
-    const addToCart = param => e => {
-        e.preventDefault();
-        console.log("============"+param.name);
-        setSelectedProducts((prevSelectedProducts) => [
-          ...prevSelectedProducts,
-           param ,
-        ]);
+  const addToCart = param => e => {
+    e.preventDefault();
+    console.log("============" + param.name);
+    setSelectedProducts((prevSelectedProducts) => [
+      ...prevSelectedProducts,
+      param,
+    ]);
+  };
+
+  const postComment = async () => {
+    // POST request using fetch with error handling
+    const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            "description": reviewTxt,
+            "rating":reviewStr,
+            "user_id": 1,
+            "product_id": id
+           })
     };
+    fetch('http://localhost:5000/api/reviews/create', requestOptions)
+    .then(res => res.json())
+    .then(
+      (jsonResponse) => {
+        // console.log(jsonResponse);
+        alert(jsonResponse.response.message)
+        window.location.reload()
+      },
+      (error) => {
+        alert("Something went wrong!!")
+      }
+    )
+}
+
+
+
+// product details page content start here---------------------
+  if (error) {
+    // return <div>Error: {error.message}</div>;
+    return (
+      <div className="container p-4">
+        <div className="alert alert-danger" role="alert">
+          Opps! Something went wrong.
+        </div>
+      </div>
+    );
+  } else if (!isLoaded) {
+    return (
+      <div className="d-flex justify-content-center p-4">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container pt-4">
@@ -54,13 +115,17 @@ function ProductDetail() {
           <p className="text-uppercase text-info">{product.category.name}</p>
           <h1 className="display-6 my-4">{product.name}</h1>
           <p className="text-muted">
-          {product.description}
+            {product.description}
           </p>
-          <p className="font-weight-light">Rating: {product.rating} <i className="bi bi-star-fill"></i></p>
-          {/* todo need to fix ============= */}
-          <div className="progress">
-            <div className="progress-bar progress-bar-striped progress-bar-animated bg-warning" role="progressbar" style={{ width: (product.rating/5)*1000 }} aria-valuenow={product.rating} aria-valuemin="0" aria-valuemax="5">{product.rating}</div>
-          </div>
+          <p className="font-weight-light">Rating: {product.rating?.toFixed(2) ?? 0} <i className="bi bi-star-fill"></i></p>
+          <ReactStars
+            count={5}
+            edit={false}
+            defaultValue={product.rating}
+            onchange={ratingChanged}
+            size={24}
+            isHalf={true}
+          />,
           <div className="row my-4">
             <div className="col-4">
               <h2 className="display-7">{product.price}<i className="bi bi-currency-euro"></i></h2>
@@ -80,25 +145,28 @@ function ProductDetail() {
 
       {/* reviews section here ====================*/}
       <hr></hr>
-      <form className="">
-        <div className="col-md-8 col-sm-12">
-          <label for="ratingRange" className="form-label">Select Rating (4.0 <i className="bi bi-star">)</i></label>
-          <RatingStar 
-            ratingVal = {4.0}
-          />
+      <div className="col-md-8 col-sm-12">
+          <label htmlFor="ratingRange" className="form-label">Select Rating ({reviewStr} <i className="bi bi-star">)</i></label>
+          <ReactStars
+            count={5}
+            defaultValue={reviewStr}
+            onChange={ratingChanged}
+            size={24}
+            isHalf={true}
+          />,
           <br></br>
-          
+
           <div className="form-floating">
-            <textarea className="form-control" 
-              placeholder="Leave a comment here" 
+            <textarea className="form-control"
+              placeholder="Leave a comment here"
               id="floatingTextarea2"
               name="reviewTxt"
-              value={reviewTxt}
-              onChange={updateReviewTxt} 
-              style={{ height: '100px' }} 
+              defaultValue={reviewTxt}
+              onChange={updateReviewTxt}
+              style={{ height: '100px' }}
               required>
             </textarea>
-            <label for="floatingTextarea2">Write review here....</label>
+            <label htmlFor="floatingTextarea2">Write review here....</label>
           </div>
         </div>
         <div className="col-md-8 col-sm-12 pt-1">
@@ -106,25 +174,24 @@ function ProductDetail() {
             <div className="col"></div>
             <div className="btn-group col" role="group" aria-label="Basic mixed styles example">
               <button onClick={resetFun} type="reset" className="btn btn-outline-danger">Cancel</button>
-              <button type="submit" className="btn btn-primary">Submit</button>
+              <button onClick={postComment} className="btn btn-primary">Submit</button>
             </div>
           </div>
         </div>
-      </form>
 
       {/* review list section here================= */}
       <div className="col-md-8 col-sm-12">
         <p className="text-muted pl-4 mb-0">Total {product.reviews.length} reviews</p>
         <hr></hr>
-      
+
         {product.reviews.map(review => (
-            // <h1>{review.user.first_name}</h1>
-            <Review 
-              key={review.id}
-              value={review}
-            />
+          // <h1>{review.user.first_name}</h1>
+          <Review
+            key={review.id}
+            value={review}
+          />
         ))}
-      
+
       </div>
     </div>
   );

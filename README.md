@@ -8,8 +8,8 @@
 - activate virtual environment command (windows): `.\venv\Scripts\activate`
 - install required packages: `pip install -r requirements.txt`
 - run project command: `python server.py`
-- To initialize database with sample data visit this url: `http://127.0.0.1:5000/data-init`
-- To clear database visit this url: `http://127.0.0.1:5000/data-clear`
+- To initialize database with sample data visit this url: `localhost:5000/data-init`
+- To clear database visit this url: `localhost:5000/data-clear`
 
 ## Todo: 
 - *I will automate these things later with docker* 

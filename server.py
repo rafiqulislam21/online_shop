@@ -1,3 +1,4 @@
+from flask_cors import CORS
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from logging.config import dictConfig
@@ -11,7 +12,7 @@ from migration import *
 from mysql_connector import *
 
 app = Flask(__name__)
-
+CORS(app)
 # connection to mysql database
 connection = app.config['SQLALCHEMY_DATABASE_URI'] = mysql_connection_string
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -23,7 +24,7 @@ mongo_db = mongo_client['online_shop_db']
 
 # ======================generate random data api start====================================
 
-@app.route('/data-init')
+@app.route('/api/data-init')
 def generate_random_data():
     clear_data()
     num_of_user = 10
@@ -133,13 +134,13 @@ def generate_random_data():
             "message": "New random Data Initialized!!!!"
         }
     }
-
+    # response.headers.add('Access-Control-Allow-Origin', '*')
     return {"data": responseJson}
 
 # clear all data api----
 
 
-@app.route('/data-clear')
+@app.route('/api/data-clear')
 def clear_data():
     db.session.commit()
     db.drop_all()
@@ -176,7 +177,7 @@ def home():
 # }
 
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def login():
     if request.method == 'POST':
         request_data = request.get_json()
@@ -200,7 +201,7 @@ def login():
     return responseJson
 
 
-@app.route('/products')
+@app.route('/api/products')
 def products():
     try:
         # query to read form database
@@ -253,7 +254,7 @@ def products():
     return responseJson
 
 
-@app.route('/products/<int:id>')
+@app.route('/api/products/<int:id>')
 def product(id):
     try:
         # query to fetch product by id
@@ -327,7 +328,7 @@ def product(id):
     return responseJson
 
 
-@app.route('/products/<int:id>/available')
+@app.route('/api/products/<int:id>/available')
 def productAvailable(id):
     # query to find if product available or no
     product = Product.query.filter_by(id=id).first()
@@ -362,7 +363,7 @@ def productAvailable(id):
 #                  {"product_id": 5,
 #                   "amount": 1}]
 # }
-@app.route('/place-order', methods=['POST'])
+@app.route('/api/place-order', methods=['POST'])
 def placeOrder():
     try:
         if request.method == 'POST':
@@ -406,7 +407,7 @@ def placeOrder():
 #  "user_id": 3
 #  "product_id": 5
 # }
-@app.route('/reviews/create', methods=['POST'])
+@app.route('/api/reviews/create', methods=['POST'])
 def reviewCreate():
     if request.method == 'POST':
         try:
@@ -444,7 +445,7 @@ def reviewCreate():
 #  "description": "some description here",
 #  "rating":4
 # }
-@app.route('/reviews/<int:id>', methods=['PATCH'])
+@app.route('/api/reviews/<int:id>', methods=['PATCH'])
 def reviewUpdate(id):
     if request.method == 'PATCH':
         try:
@@ -474,7 +475,7 @@ def reviewUpdate(id):
     return responseJson
 
 
-@app.route('/reviews/<int:id>', methods=['DELETE'])
+@app.route('/api/reviews/<int:id>', methods=['DELETE'])
 def reviewDelete(id):
     if request.method == 'DELETE':
         try:
@@ -507,7 +508,7 @@ def reviewDelete(id):
 # "is_active": true,
 # "brand_id": 1,
 # "category_id":1}
-@app.route('/admin/products/add', methods=['POST'])
+@app.route('/api/admin/products/add', methods=['POST'])
 def productAdd():
     if request.method == 'POST':
         try:
@@ -548,7 +549,7 @@ def productAdd():
 #  "brand_id": 1,
 # "category_id":2
 # }
-@app.route('/admin/products/<int:id>', methods=['PATCH'])
+@app.route('/api/admin/products/<int:id>', methods=['PATCH'])
 def productUpdate(id):
     if request.method == 'PATCH':
         try:
@@ -582,7 +583,7 @@ def productUpdate(id):
     return responseJson
 
 
-@app.route('/admin/products/<int:id>', methods=['DELETE'])
+@app.route('/api/admin/products/<int:id>', methods=['DELETE'])
 def productDelete(id):
     if request.method == 'DELETE':
         try:
@@ -611,7 +612,7 @@ def productDelete(id):
 # {
 #     "status": "delivered"
 # }
-@app.route('/admin/orders/<int:id>', methods=['PATCH'])
+@app.route('/api/admin/orders/<int:id>', methods=['PATCH'])
 def orderUpdate(id):
     if request.method == 'PATCH':
         try:
@@ -641,7 +642,7 @@ def orderUpdate(id):
     return responseJson
 
 
-@app.route('/admin/orders/<int:id>', methods=['DELETE'])
+@app.route('/api/admin/orders/<int:id>', methods=['DELETE'])
 def orderDelete(id):
     if request.method == 'DELETE':
         try:
@@ -668,7 +669,7 @@ def orderDelete(id):
 
 # ======================data migration start======================================
 
-@app.route('/migrate')
+@app.route('/api/migrate')
 def migrate_data():    
     migrate(db, mongo_db)
 
@@ -680,7 +681,7 @@ def migrate_data():
     }
     return responseJson
 
-@app.route('/clear-mongodb')
+@app.route('/api/clear-mongodb')
 def clear_mongodb():
     reset_mongo_db(mongo_db)
 
@@ -698,4 +699,4 @@ if __name__ == '__main__':
     db.init_app(app)
     with app.app_context():
         db.create_all()
-    app.run(debug=True)
+    app.run(debug=True, host="localhost", port=5000)
