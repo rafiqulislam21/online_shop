@@ -8,8 +8,12 @@
 - activate virtual environment command (windows): `.\venv\Scripts\activate`
 - install required packages: `pip install -r requirements.txt`
 - run project command: `python server.py`
-- To initialize database with sample data visit this url: `localhost:5000/data-init`
-- To clear database visit this url: `localhost:5000/data-clear`
+- To initialize database with sample data visit this url: `localhost:5000/api/data-init`
+- To clear database visit this url: `localhost:5000/api/data-clear`
+
+### Recent changes
+- api structure changed sample `localhost:5000/api/.....`
+- some api added to frontend
 
 ## Todo: 
 - *I will automate these things later with docker* 
