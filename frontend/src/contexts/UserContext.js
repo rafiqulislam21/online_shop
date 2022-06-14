@@ -15,7 +15,7 @@ export const UserProvider = (props) => {
         // }
     )
 
-    return(
+    return (
         <UserContext.Provider value={[loggedUser, setLoggedUser]}>
             {props.children}
         </UserContext.Provider>

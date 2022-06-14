@@ -23,12 +23,12 @@ function Review(props) {
 
   const ratingChanged = (newRating) => {
     setReviewStr(newRating);
-    console.log(newRating);
+    // console.log(newRating);
   };
 
   const deleteReview = async () => {
     var reviewId = (props.value.id)
-    console.log(props.value)
+    // console.log(props.value)
     const requestOptions = {
       method: 'DELETE'
     };

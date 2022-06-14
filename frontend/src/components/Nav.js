@@ -40,7 +40,7 @@ function Nav() {
   }
 
   const userChange = (e) => {
-    console.log(users[e.target.value])
+    // console.log(users[e.target.value])
     setLoggedUser(users[e.target.value]);
 
   };
@@ -90,21 +90,29 @@ function Nav() {
               </Link>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#" onClick={initData}>Init data</a>
+              <a className="nav-link" href="#" onClick={initData}>Init-data</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#" onClick={clrData}>Clear data</a>
+              <a className="nav-link" href="#" onClick={clrData}>Clear-data</a>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#" onClick={migrateData}>Migrate DB</a>
+              <a className="nav-link" href="#" onClick={migrateData}>Migrate-DB</a>
             </li>
             <li className="nav-item dropdown">
               <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Reports
               </a>
               <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a className="dropdown-item" href="#">Report 1</a></li>
-                <li><a className="dropdown-item" href="#">Report 2</a></li>
+                <li>
+                  <Link className="dropdown-item" to="/report-1">
+                    Report 1
+                  </Link>
+                </li>
+                <li>
+                  <Link className="dropdown-item" to="/report-2">
+                    Report 2
+                  </Link>
+                </li>
               </ul>
             </li>
           </ul>

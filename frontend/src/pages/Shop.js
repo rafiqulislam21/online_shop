@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import Card from '../components/Card';
 import '../App.css';
 // import {Link} from 'react-router-dom';
-import { ShopContext } from "../contexts/ShopContext";  
+import { ShopContext } from "../contexts/ShopContext";
 function Shop() {
   useEffect(() => {
     fetchItems();
@@ -11,17 +11,17 @@ function Shop() {
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  
-  
+
+
   const fetchItems = async () => {
 
     fetch('http://localhost:5000/api/products')
-    .then(res => res.json())
+      .then(res => res.json())
       .then(
         (jsonResponse) => {
           setIsLoaded(true);
-          console.log(jsonResponse);
-          setProducts(jsonResponse.response.products);      
+          // console.log(jsonResponse);
+          setProducts(jsonResponse.response.products);
         },
         (error) => {
           setIsLoaded(true);
@@ -38,31 +38,34 @@ function Shop() {
           Opps! Something went wrong.
         </div>
       </div>
-      );
+    );
   } else if (!isLoaded) {
     return (
       <div className="d-flex justify-content-center p-4">
         <div className="spinner-border" role="status">
-            <span className="visually-hidden">Loading...</span>
+          <span className="visually-hidden">Loading...</span>
         </div>
       </div>
-      );
+    );
   }
   return (
-    <div className="container">
-      <br></br>
-      <h1 className="display-6 my-4">Products({products.length})</h1>
-      <div className="row row-cols-1 row-cols-md-3 g-5">
-        {/* product list loop here */}
-        {products.map(product => (
-          //single product
-          <Card
-            key={product.id}
-            value={product}
-          />
-        ))}
+    (!products.length)
+      ? <h1 className="display-4 text-muted text-center">No products available!</h1>
+      : <div className="container">
+        <br></br>
+        <h4 className="my-4">Products({products.length})</h4>
+        <hr></hr>
+        <div className="row row-cols-1 row-cols-md-3 g-5">
+          {/* product list loop here */}
+          {products.map(product => (
+            //single product
+            <Card
+              key={product.id}
+              value={product}
+            />
+          ))}
+        </div>
       </div>
-    </div>
   );
 }
 

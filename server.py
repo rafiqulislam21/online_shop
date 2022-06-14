@@ -10,6 +10,7 @@ from collections import defaultdict
 from config import *
 from migration import *
 from mysql_connector import *
+import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -18,12 +19,11 @@ connection = app.config['SQLALCHEMY_DATABASE_URI'] = mysql_connection_string
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # connection to mongodb database
-
-# mongo_client = pymongo.MongoClient(mongo_connection_string)
-# mongo_db = mongo_client['online_shop_db']
+mongo_client = pymongo.MongoClient(mongo_connection_string)
+mongo_db = mongo_client['online_shop_db']
 
 # ======================generate random data api start====================================
-
+# initialisation data api---------
 @app.route('/api/data-init')
 def generate_random_data():
     clear_data()
@@ -98,7 +98,7 @@ def generate_random_data():
         fake_product["price"].append(fake.random_int(min=100, max=2000))
         fake_product["is_active"].append(
             fake.boolean(chance_of_getting_true=85))
-        fake_product["created_date"].append(fake.date_time())
+        fake_product["created_date"].append(fake.date_time_this_decade())
         fake_product["brand_id"].append(
             fake.random_int(min=1, max=len(brand_list)))
         fake_product["category_id"].append(
@@ -112,7 +112,7 @@ def generate_random_data():
     for _ in range(num_of_review):
         fake_review["description"].append(fake.paragraph(nb_sentences=3))
         fake_review["rating"].append(fake.random_int(min=0, max=5))
-        fake_review["created_date"].append(fake.date_time())
+        fake_review["created_date"].append(fake.date_time_this_decade())
         fake_review["user_id"].append(fake.random_int(min=1, max=num_of_user))
         fake_review["product_id"].append(
             fake.random_int(min=1, max=num_of_product))
@@ -125,7 +125,7 @@ def generate_random_data():
     for _ in range(num_of_order):
         fake_order["status"].append(fake.random_element(
             elements=('pending', 'processing', 'delivered')))
-        fake_order["created_date"].append(fake.date_time())
+        fake_order["created_date"].append(fake.date_time_this_decade())
         fake_order["user_id"].append(fake.random_int(min=1, max=num_of_user))
     df_fake_order = pd.DataFrame(fake_order)
     df_fake_order.to_sql(con=connection, name='order',
@@ -152,9 +152,8 @@ def generate_random_data():
     # response.headers.add('Access-Control-Allow-Origin', '*')
     return {"data": responseJson}
 
-# clear all data api----
 
-
+# clear all data api--------------
 @app.route('/api/data-clear')
 def clear_data():
     db.session.commit()
@@ -168,10 +167,10 @@ def clear_data():
         }
     }
     return responseJson
-# ======================generate random data end======================================
+# ======================generate random data end==========================================
 
 
-# =============================api start================================
+# =============================api start==================================================
 # API Route
 @app.route('/')
 def home():
@@ -186,12 +185,7 @@ def home():
     }
     return responseJson
 
-# reques demo
-# {
-#     "email": "rfreeman@example.com"
-# }
-
-
+# gives list of user for user drowp down list in nav bar(fake login)
 @app.route('/api/users')
 def users():
     try:
@@ -465,25 +459,47 @@ def reviewCreate():
             request_data = request.get_json()
 
             # check if user already review this product
-            # reviewByUserId = Review.query.filter_by(id=id).first()
-            # check if user already buy this product
-
-            single_review = Review(
-                description=request_data['description'],
-                rating=request_data['rating'],
-                user_id=request_data['user_id'],
-                product_id=request_data['product_id']
-            )
-            db.session.add(single_review)
-            db.session.commit()
-            # app.logger.info(request_data)
-
-            responseJson = {
-                "response": {
-                    "status": 1,
-                    "message": "Review created successfully!"
+            alreadyReviewed = Review.query.filter_by(user_id=request_data['user_id'], product_id=request_data['product_id']).first() is not None
+                     
+            # #TODO check if user already buy this product
+            # alreadyBroughtProduct = Order.query.filter_by(user_id=request_data['user_id']).all()
+            
+            # app.logger.info("reviewByUserId============")
+            # app.logger.info(alreadyReviewed)
+            # for item in alreadyBroughtProduct:
+            #     app.logger.info(item.id)
+            #     app.logger.info(item.status)
+            #     app.logger.info(item.created_date)
+            #     app.logger.info("============")
+            #     for i in item.products:
+            #         app.logger.info(i.product_id)
+            #         app.logger.info(i.user_id)
+            #         app.logger.info("===######=========")
+            
+            if alreadyReviewed:
+                responseJson = {
+                    "response": {
+                        "status": -1,
+                        "message": "You already reviewed this product!"
+                    }
                 }
-            }
+            else:
+                single_review = Review(
+                    description=request_data['description'],
+                    rating=request_data['rating'],
+                    user_id=request_data['user_id'],
+                    product_id=request_data['product_id']
+                )
+                db.session.add(single_review)
+                db.session.commit()
+                # app.logger.info(request_data)
+
+                responseJson = {
+                    "response": {
+                        "status": 1,
+                        "message": "Review created successfully!"
+                    }
+                }
         except:
             responseJson = {
                 "response": {
@@ -552,6 +568,81 @@ def reviewDelete(id):
                 }
             }
         return responseJson
+
+
+@app.route('/api/report-1')
+def report1():
+    current_time = datetime.datetime.now()
+    one_year_ago = current_time - datetime.timedelta(days=365)
+
+    try:
+        # get products that added between now and one year ago from database
+        product_list_obj = Product.query.filter(Product.created_date > one_year_ago).all()
+        # serialize data to json
+        product_list_serialized = []
+        for p in product_list_obj:
+            # query to find averge value of the product
+            rating_avg = db.session.query(db.func.avg(Review.rating)).filter(Review.product_id == p.id).scalar()
+            if rating_avg == None:
+                rating_avg = 0.0
+
+            review_list = []
+            for r in p.reviews:
+                r_item = {
+                    "id": r.id,
+                    "description": r.description,
+                    "rating": r.rating,
+                    "created_date": r.created_date,
+                    "user_id": r.user_id,
+                    "product_id": r.product_id
+                }
+                review_list.append(r_item)
+
+            category_serialized = {
+            "id": p.category.id,
+            "name": p.category.name,
+            "description": p.category.description,
+            }
+            brand_serialized = {
+                "id": p.brand.id,
+                "name": p.brand.name,
+                "description": p.brand.description,
+            }
+
+            p_item = {
+                "id": p.id,
+                "name": p.name,
+                "description": p.description,
+                "price": p.price,
+                "is_active": p.is_active,
+                "created_date": p.created_date,
+                "reviews": review_list,
+                "brand_id": p.brand_id,
+                "category_id": p.category_id,
+                "category": category_serialized,
+                "brand": brand_serialized,
+                "rating_avg":rating_avg
+            }
+            product_list_serialized.append(p_item)
+
+        # sort product list by averge rating decending order
+        product_list_serialized.sort(key=lambda x: x["rating_avg"], reverse=True)
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "list of all product",
+                "products": product_list_serialized
+            }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "Product list empty",
+                "products": []
+            }
+        }
+    return responseJson
 
 
 # -----------------admin--------------
@@ -719,7 +810,7 @@ def orderDelete(id):
                 }
             }
     return responseJson
-# =============================api end================================
+# =============================api end============================================
 
 # ======================data migration start======================================
 
@@ -748,7 +839,7 @@ def clear_mongodb():
     return responseJson
 # ======================data migration end======================================
 
-# ---------------main----------------
+# ---------------main-----------------------------------------------------------
 if __name__ == '__main__':
     db.init_app(app)
     with app.app_context():

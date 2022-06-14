@@ -32,7 +32,7 @@ function ProductDetail() {
   }
   const ratingChanged = (newRating) => {
     setReviewStr(newRating);
-    console.log(newRating);
+    // console.log(newRating);
   };
 
   const fetchItems = async () => {
@@ -41,7 +41,7 @@ function ProductDetail() {
       .then(
         (jsonResponse) => {
           setIsLoaded(true);
-          console.log(jsonResponse);
+          // console.log(jsonResponse);
           setProduct(jsonResponse.response.product);
         },
         (error) => {
@@ -53,22 +53,22 @@ function ProductDetail() {
   const itemAvailable = param => async () => {
     var productId = product.id
     fetch(`http://localhost:5000/api/products/${productId}/available`)
-        .then(res => res.json())
-        .then(
-            (jsonResponse) => {
-                if (jsonResponse.response.is_available === true) {
-                    // if product is available the added to cart
-                    setSelectedProducts((prevSelectedProducts) => [
-                        ...prevSelectedProducts,
-                        param,
-                    ]);
-                    // alert("Product added to cart");
-                } else {
-                    alert(jsonResponse.response.message);
-                }
-            }
-        )
-}
+      .then(res => res.json())
+      .then(
+        (jsonResponse) => {
+          if (jsonResponse.response.is_available === true) {
+            // if product is available the added to cart
+            setSelectedProducts((prevSelectedProducts) => [
+              ...prevSelectedProducts,
+              param,
+            ]);
+            // alert("Product added to cart");
+          } else {
+            alert(jsonResponse.response.message);
+          }
+        }
+      )
+  }
 
   const postComment = async () => {
     // POST request using fetch with error handling
@@ -76,32 +76,32 @@ function ProductDetail() {
     // console.log(loggedUser.first_name);
     // console.log(loggedUser.id);
     const requestOptions = {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            "description": reviewTxt,
-            "rating":reviewStr,
-            "user_id": loggedUser.id,
-            "product_id": id
-           })
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "description": reviewTxt,
+        "rating": reviewStr,
+        "user_id": loggedUser.id,
+        "product_id": id
+      })
     };
     fetch('http://localhost:5000/api/reviews/create', requestOptions)
-    .then(res => res.json())
-    .then(
-      (jsonResponse) => {
-        // console.log(jsonResponse);
-        alert(jsonResponse.response.message)
-        window.location.reload()
-      },
-      (error) => {
-        alert("Something went wrong!!")
-      }
-    )
-}
+      .then(res => res.json())
+      .then(
+        (jsonResponse) => {
+          // console.log(jsonResponse);
+          alert(jsonResponse.response.message)
+          window.location.reload()
+        },
+        (error) => {
+          alert("Something went wrong!!")
+        }
+      )
+  }
 
 
 
-// product details page content start here---------------------
+  // product details page content start here---------------------
   if (error) {
     // return <div>Error: {error.message}</div>;
     return (
@@ -125,7 +125,7 @@ function ProductDetail() {
     <div className="container pt-4">
       <div className="row">
         <div className="col-md-8">
-          <img src="https://via.placeholder.com/300.png/09f/fff" className="img-responsive fit-image" alt=""></img>
+          <img src="/no-image.jpg" className="img-responsive fit-image" alt=""></img>
         </div>
         <div className="col-md-4">
           <p className="text-uppercase text-info mb-0 mt-2">Category: {product.category.name}</p>
@@ -162,38 +162,38 @@ function ProductDetail() {
       {/* reviews section here ====================*/}
       <hr></hr>
       <div className="col-md-8 col-sm-12">
-          <label htmlFor="ratingRange" className="form-label">Select Rating ({reviewStr} <i className="bi bi-star">)</i></label>
-          <ReactStars
-            count={5}
-            value={reviewStr}
-            onChange={ratingChanged}
-            size={24}
-            isHalf={true}
-          />
-          <br></br>
+        <label htmlFor="ratingRange" className="form-label">Select Rating ({reviewStr} <i className="bi bi-star">)</i></label>
+        <ReactStars
+          count={5}
+          value={reviewStr}
+          onChange={ratingChanged}
+          size={24}
+          isHalf={true}
+        />
+        <br></br>
 
-          <div className="form-floating">
-            <textarea className="form-control"
-              placeholder="Leave a comment here"
-              id="floatingTextarea2"
-              name="reviewTxt"
-              defaultValue={reviewTxt}
-              onChange={updateReviewTxt}
-              style={{ height: '100px' }}
-              required>
-            </textarea>
-            <label htmlFor="floatingTextarea2">Write review here....</label>
+        <div className="form-floating">
+          <textarea className="form-control"
+            placeholder="Leave a comment here"
+            id="floatingTextarea2"
+            name="reviewTxt"
+            defaultValue={reviewTxt}
+            onChange={updateReviewTxt}
+            style={{ height: '100px' }}
+            required>
+          </textarea>
+          <label htmlFor="floatingTextarea2">Write review here....</label>
+        </div>
+      </div>
+      <div className="col-md-8 col-sm-12 pt-1">
+        <div className="row justify-content-between">
+          <div className="col"></div>
+          <div className="btn-group col" role="group" aria-label="Basic mixed styles example">
+            <button onClick={resetFun} type="reset" className="btn btn-outline-danger">Cancel</button>
+            <button onClick={postComment} className="btn btn-primary">Submit</button>
           </div>
         </div>
-        <div className="col-md-8 col-sm-12 pt-1">
-          <div className="row justify-content-between">
-            <div className="col"></div>
-            <div className="btn-group col" role="group" aria-label="Basic mixed styles example">
-              <button onClick={resetFun} type="reset" className="btn btn-outline-danger">Cancel</button>
-              <button onClick={postComment} className="btn btn-primary">Submit</button>
-            </div>
-          </div>
-        </div>
+      </div>
 
       {/* review list section here================= */}
       <div className="col-md-8 col-sm-12">

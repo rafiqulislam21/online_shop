@@ -30,7 +30,7 @@ const Card = (props) => {
     return (
         <div className="col">
             <div className="card shadow rounded">
-                <img src="https://via.placeholder.com/300.png/09f/fff" className="card-img-top" alt=""></img>
+                <img src="/no-image.jpg" className="card-img-top" alt=""></img>
                 <div className="card-body">
                     <h5 className="card-title">{props.value.name}</h5>
                     <p className="card-text minimal-text">{props.value.description}</p>

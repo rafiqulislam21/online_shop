@@ -27,12 +27,12 @@ function Cart() {
   }
 
   const postOrder = async () => {
-    if(selectedProducts?.length < 1){
+    if (selectedProducts?.length < 1) {
       alert("No products selected in the cart");
-    }else{
+    } else {
       var orderProductList = [];
-    
-      selectedProducts.forEach((p)=>{
+
+      selectedProducts.forEach((p) => {
         var productCount = 1;
         const isFound = orderProductList.some(element => {
           if (element.product_id === p.id) {
@@ -40,13 +40,13 @@ function Cart() {
           }
           return false;
         });
-        
-        if (isFound){
+
+        if (isFound) {
           // if product already selected then update amount
           productCount++;
           var objIndex = orderProductList.findIndex((obj => obj.product_id === p.id));
           orderProductList[objIndex].amount = productCount;
-        }else{
+        } else {
           // if product not selected then add to the list
           orderProductList.push({
             "product_id": p.id,
@@ -57,7 +57,7 @@ function Cart() {
 
 
       // api call here-----------------------
-      console.log(orderProductList)
+      // console.log(orderProductList)
       const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,7 +80,7 @@ function Cart() {
           }
         )
     }
-    
+
   }
 
 
