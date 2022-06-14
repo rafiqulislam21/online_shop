@@ -4,6 +4,7 @@ import Review from '../components/Review';
 import ReactStars from "react-rating-stars-component";
 import { ProductContext } from "../contexts/ProductContext";
 import { CartContext } from "../contexts/CartContext";
+import { UserContext } from "../contexts/UserContext";
 
 import '../App.css';
 
@@ -11,6 +12,7 @@ function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useContext(ProductContext);
   const [selectedProducts, setSelectedProducts] = useContext(CartContext);
+  const [loggedUser, setLoggedUser] = useContext(UserContext);
   const [reviewTxt, setReviewTxt] = useState("");
   const [reviewStr, setReviewStr] = useState(0);
   const [error, setError] = useState(null);
@@ -48,24 +50,38 @@ function ProductDetail() {
         }
       )
   }
-  const addToCart = param => e => {
-    e.preventDefault();
-    console.log("============" + param.name);
-    setSelectedProducts((prevSelectedProducts) => [
-      ...prevSelectedProducts,
-      param,
-    ]);
-  };
+  const itemAvailable = param => async () => {
+    var productId = product.id
+    fetch(`http://localhost:5000/api/products/${productId}/available`)
+        .then(res => res.json())
+        .then(
+            (jsonResponse) => {
+                if (jsonResponse.response.is_available === true) {
+                    // if product is available the added to cart
+                    setSelectedProducts((prevSelectedProducts) => [
+                        ...prevSelectedProducts,
+                        param,
+                    ]);
+                    // alert("Product added to cart");
+                } else {
+                    alert(jsonResponse.response.message);
+                }
+            }
+        )
+}
 
   const postComment = async () => {
     // POST request using fetch with error handling
+    console.log(loggedUser);
+    // console.log(loggedUser.first_name);
+    // console.log(loggedUser.id);
     const requestOptions = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             "description": reviewTxt,
             "rating":reviewStr,
-            "user_id": 1,
+            "user_id": loggedUser.id,
             "product_id": id
            })
     };
@@ -112,7 +128,8 @@ function ProductDetail() {
           <img src="https://via.placeholder.com/300.png/09f/fff" className="img-responsive fit-image" alt=""></img>
         </div>
         <div className="col-md-4">
-          <p className="text-uppercase text-info">{product.category.name}</p>
+          <p className="text-uppercase text-info mb-0 mt-2">Category: {product.category.name}</p>
+          <p className="text m-0">Brand: {product.brand.name}</p>
           <h1 className="display-6 my-4">{product.name}</h1>
           <p className="text-muted">
             {product.description}
@@ -121,18 +138,17 @@ function ProductDetail() {
           <ReactStars
             count={5}
             edit={false}
-            defaultValue={product.rating}
-            onchange={ratingChanged}
+            value={product.rating}
             size={24}
             isHalf={true}
-          />,
+          />
           <div className="row my-4">
             <div className="col-4">
               <h2 className="display-7">{product.price}<i className="bi bi-currency-euro"></i></h2>
             </div>
             <div className="col-8">
               <div className="row px-3">
-                <button onClick={addToCart(product)} type="button" className="btn btn-success mx-1" data-bs-toggle="tooltip" data-bs-html="true" title="add to cart">
+                <button onClick={itemAvailable(product)} type="button" className="btn btn-success mx-1" data-bs-toggle="tooltip" data-bs-html="true" title="add to cart">
                   <i className="bi bi-cart-plus"></i> add to cart
                 </button>
               </div>
@@ -149,11 +165,11 @@ function ProductDetail() {
           <label htmlFor="ratingRange" className="form-label">Select Rating ({reviewStr} <i className="bi bi-star">)</i></label>
           <ReactStars
             count={5}
-            defaultValue={reviewStr}
+            value={reviewStr}
             onChange={ratingChanged}
             size={24}
             isHalf={true}
-          />,
+          />
           <br></br>
 
           <div className="form-floating">

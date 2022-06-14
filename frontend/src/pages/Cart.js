@@ -2,23 +2,16 @@ import React, { useState, useEffect, useContext } from 'react';
 import '../App.css';
 import CardHorizontal from '../components/CardHorizontal';
 import { CartContext } from "../contexts/CartContext";
+import { UserContext } from "../contexts/UserContext";
 
 function Cart() {
   useEffect(() => {
-    fetchItems();
     calculateTotal();
   });
 
   const [selectedProducts, setSelectedProducts] = useContext(CartContext);
+  const [loggedUser, setLoggedUser] = useContext(UserContext);
   const [totalPrice, setTotalPrice] = useState(0);
-  const fetchItems = async () => {
-    // const data = await fetch('https://fortnite-api.theapinetwork.com/upcoming/get');
-
-    // const items = await data.json();
-    // console.log(items.data);
-    // setItems(items.data);
-
-  }
 
   function calculateTotal() {
     let total = 0;
@@ -33,32 +26,81 @@ function Cart() {
     setSelectedProducts([]);
   }
 
+  const postOrder = async () => {
+    if(selectedProducts?.length < 1){
+      alert("No products selected in the cart");
+    }else{
+      var orderProductList = [];
+    
+      selectedProducts.forEach((p)=>{
+        var productCount = 1;
+        const isFound = orderProductList.some(element => {
+          if (element.product_id === p.id) {
+            return true;
+          }
+          return false;
+        });
+        
+        if (isFound){
+          // if product already selected then update amount
+          productCount++;
+          var objIndex = orderProductList.findIndex((obj => obj.product_id === p.id));
+          orderProductList[objIndex].amount = productCount;
+        }else{
+          // if product not selected then add to the list
+          orderProductList.push({
+            "product_id": p.id,
+            "amount": productCount
+          })
+        }
+      })
+
+
+      // api call here-----------------------
+      console.log(orderProductList)
+      const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          "user_id": loggedUser.id,
+          "products": orderProductList
+        })
+      };
+      fetch('http://localhost:5000/api/place-order', requestOptions)
+        .then(res => res.json())
+        .then(
+          (jsonResponse) => {
+            // console.log(jsonResponse);
+            alert(jsonResponse.response.message)
+            // setSelectedProducts([]);
+            window.location.reload()
+          },
+          (error) => {
+            alert("Something went wrong!!")
+          }
+        )
+    }
+    
+  }
+
 
   return (
     <div className="container">
       <h3 className="text-muted py-4">Selected products</h3>
       <div className="container px-5">
-
-        {/* selected product list here ======*/}
-        {/* {selectedProducts.map(item => (
-          <CardHorizontal
-            key={item.id}
-            value={item}
-          />
-        ))} */}
         {
-          (!selectedProducts.length) 
-          ? <h1 className="display-4 text-muted text-center">Empty cart!</h1>
-          : selectedProducts.map(function (item, index) {
-            return (
-              <CardHorizontal
-                key={index}
-                value={item}
-              />
-            )
-          })
-        
-        
+          (!selectedProducts.length)
+            ? <h1 className="display-4 text-muted text-center">Empty cart!</h1>
+            : selectedProducts.map(function (item, index) {
+              return (
+                <CardHorizontal
+                  key={index}
+                  value={item}
+                />
+              )
+            })
+
+
         }
 
         <div className="card mt-3">
@@ -71,9 +113,9 @@ function Cart() {
               <h6 className="mb-0"></h6>
               <span>
                 <button onClick={cearAll} type="button" className="btn btn-danger btn-lg ">clear all</button>&nbsp;&nbsp;&nbsp;&nbsp;
-                <button type="button" className="btn btn-success btn-lg">place order</button>
+                <button onClick={postOrder} type="button" className="btn btn-success btn-lg">place order</button>
               </span>
-              
+
             </li>
           </ul>
         </div>

@@ -6,6 +6,7 @@
 - add your connection strings to config.py file
 - create a virtual environment using this command `python -m venv venv`
 - activate virtual environment command (windows): `.\venv\Scripts\activate`
+- activate virtual environment command (linux/mac): `source venv/bin/activate`
 - install required packages: `pip install -r requirements.txt`
 - run project command: `python server.py`
 - To initialize database with sample data visit this url: `localhost:5000/api/data-init`

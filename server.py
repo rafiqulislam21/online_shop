@@ -19,15 +19,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # connection to mongodb database
 
-mongo_client = pymongo.MongoClient(mongo_connection_string)
-mongo_db = mongo_client['online_shop_db']
+# mongo_client = pymongo.MongoClient(mongo_connection_string)
+# mongo_db = mongo_client['online_shop_db']
 
 # ======================generate random data api start====================================
 
 @app.route('/api/data-init')
 def generate_random_data():
     clear_data()
-    num_of_user = 10
+    num_of_user = 5
     num_of_product = 10
     num_of_review = 10
     num_of_order = 10
@@ -57,17 +57,32 @@ def generate_random_data():
 
     # generated fake categorys------------------
     fake_category = defaultdict(list)
-    category_list = ['Electronics', 'Accesories', 'Kids', 'Exclusive']
+    category_list = [
+        'Electronics', 
+        'Books', 
+        'Beauty', 
+        'Sports',
+        'Camera',
+        'Smartphones',
+        'Laptops',
+        'Audio Books',
+        'Soccer'
+        ]
     for index in range(len(category_list)):
         fake_category["name"].append(category_list[index])
         fake_category["description"].append(fake.paragraph(nb_sentences=3))
+        if index > 3:
+            # null for patent catefory id otherwise set id for childs
+            fake_category["parent_id"].append(fake.random_int(min=1, max=4))
+        else:
+            fake_category["parent_id"].append(None)
     df_fake_category = pd.DataFrame(fake_category)
     df_fake_category.to_sql(con=connection, name='category',
                             if_exists='append', index=False)
 
     # generated fake brand------------------
     fake_brand = defaultdict(list)
-    brand_list = ['Apple', 'Samsung', 'LG', 'Tesla', 'Xiaomi']
+    brand_list = ['Apple', 'Samsung', 'LG', 'Tesla', 'HP', 'Adidus']
     for index in range(len(brand_list)):
         fake_brand["name"].append(brand_list[index])
         fake_brand["description"].append(fake.paragraph(nb_sentences=3))
@@ -177,28 +192,49 @@ def home():
 # }
 
 
-@app.route('/api/login', methods=['POST'])
-def login():
-    if request.method == 'POST':
-        request_data = request.get_json()
+@app.route('/api/users')
+def users():
+    try:
+        # query to read form database
+        user_list_obj = User.query.all()
+        # serialize data to json
+        user_list_serialized = []
+        for p in user_list_obj:
 
-        user = User.query.filter_by(email=request_data['email']).first()
-        if user is not None:
-            responseJson = {
-                "response": {
-                    "status": 1,
-                    "message": "Login successful!"
-                    # "username_pass": request_data['username'] + ": " + request_data['password']
+            user_role = {
+                "id": p.user_role.id,
+                "role": p.user_role.role,
                 }
+
+            user = {
+                "id": p.id,
+                "first_name": p.first_name,
+                "last_name": p.last_name,
+                "email": p.email,
+                "phone_no": p.phone_no,
+                "user_role_id": p.user_role_id,
+                "user_role": user_role
             }
-        else:
-            responseJson = {
-                "response": {
-                    "status": 1,
-                    "message": "User not found!"
-                }
+            user_list_serialized.append(user)
+
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "list of all user",
+                "users": user_list_serialized
             }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "User list empty",
+                "products": user_list_serialized
+            }
+        }
+
     return responseJson
+
 
 
 @app.route('/api/products')
@@ -209,6 +245,7 @@ def products():
         # serialize data to json
         product_list_serialized = []
         for p in product_list_obj:
+            # query to fetch product by id
             review_list = []
             for r in p.reviews:
                 r_item = {
@@ -221,6 +258,17 @@ def products():
                 }
                 review_list.append(r_item)
 
+            category_serialized = {
+            "id": p.category.id,
+            "name": p.category.name,
+            "description": p.category.description,
+            }
+            brand_serialized = {
+                "id": p.brand.id,
+                "name": p.brand.name,
+                "description": p.brand.description,
+            }
+
             p_item = {
                 "id": p.id,
                 "name": p.name,
@@ -231,6 +279,8 @@ def products():
                 "reviews": review_list,
                 "brand_id": p.brand_id,
                 "category_id": p.category_id,
+                "category": category_serialized,
+                "brand": brand_serialized
                 # "orders": p.orders,
             }
             product_list_serialized.append(p_item)
@@ -413,6 +463,10 @@ def reviewCreate():
         try:
             # data from post request
             request_data = request.get_json()
+
+            # check if user already review this product
+            # reviewByUserId = Review.query.filter_by(id=id).first()
+            # check if user already buy this product
 
             single_review = Review(
                 description=request_data['description'],
