@@ -1,4 +1,5 @@
 import pandas as pd
+import pymongo
 from mysql_connector import *
 
 def reset_mongo_db(mongo_db):
@@ -9,12 +10,9 @@ def reset_mongo_db(mongo_db):
 def migrate(db, mongo_db):
     """ function to query all information from mysql database and move it into mongodb. """
 
-    a = Product.query.all()
-    b = type(a[0])
-
     # query tables from sql    
     df_brand = pd.DataFrame([x.__dict__ for x in Brand.query.all()])    
-    # df_category = pd.read_sql_query(sql='select * from category', con=db)
+    df_category = pd.DataFrame([x.__dict__ for x in Category.query.all()]) 
     df_order = pd.DataFrame([x.__dict__ for x in Order.query.all()])    
     df_product = pd.DataFrame([x.__dict__ for x in Product.query.all()])    
     df_product_order = pd.DataFrame([x.__dict__ for x in ProductOrder.query.all()])
@@ -24,6 +22,7 @@ def migrate(db, mongo_db):
 
     # delete SQLAlchemy properties
     df_brand = df_brand.drop('_sa_instance_state', axis=1)
+    df_category = df_category.drop('_sa_instance_state', axis=1)
     df_product = df_product.drop('_sa_instance_state', axis=1)
     df_review = df_review.drop('_sa_instance_state', axis=1) 
     df_user = df_user.drop('_sa_instance_state', axis=1)
@@ -32,6 +31,7 @@ def migrate(db, mongo_db):
     # rename index column and fix datetime format    
     df_user.rename(columns={'id': '_id'}, inplace=True)
     df_brand.rename(columns={'id': '_id'}, inplace=True)
+    df_category.rename(columns={'id': '_id'}, inplace=True)
     df_product.rename(columns={'id': '_id'}, inplace=True)
     df_review.rename(columns={'id': '_id'}, inplace=True)
     df_user.rename(columns={'id': '_id'}, inplace=True)
@@ -44,6 +44,7 @@ def migrate(db, mongo_db):
     col = mongo_db['user']
     df_user['user_role_id'] = df_user['user_role_id'].map(df_user_role.set_index('id')['role'])
     df_user.rename(columns={'user_role_id': 'role_name'}, inplace=True)
+    col.create_index([('email', pymongo.ASCENDING)], unique=True)
     users = [row.dropna().to_dict() for _, row in df_user.iterrows()]
     col.insert_many(users)
 
@@ -54,7 +55,23 @@ def migrate(db, mongo_db):
 
     # create and migrate category collection
     col = mongo_db['category']
-    # TODO: migrate categories
+    categories = [row.dropna().to_dict() for _, row in df_category.iterrows()]
+    col.insert_many(categories)
+
+    # preprocess categories
+    list_of_categories = []
+
+    for category in categories:
+        if 'parent_id' not in category:
+            del category['description']
+            list_of_categories.append([category])
+        else:
+            for inner_list in list_of_categories:
+                for elem in inner_list:
+                    if ('parent_id' in category) and (elem['_id'] == category['parent_id']):
+                        del category['description']
+                        del category['parent_id']
+                        inner_list.append(category)
 
     # create and migrate product collection
     col = mongo_db['product']
@@ -64,7 +81,11 @@ def migrate(db, mongo_db):
         product['brand'] = brand
         del product['brand_id']
 
-        # TODO: write categories
+        for inner_list in list_of_categories:
+            for elem in inner_list:
+                if elem['_id'] == product['category_id']:
+                    product['category'] = inner_list
+        del product['category_id']
 
         reviews = df_review.loc[df_review['product_id'] == product['_id']].drop('product_id', axis=1).to_dict(orient='records')
         for review in reviews:
@@ -73,6 +94,9 @@ def migrate(db, mongo_db):
             review['user_last_name'] = author['last_name']
 
         product['reviews'] = reviews
+    col.create_index([('name', pymongo.TEXT)])
+    col.create_index([('brand._id', pymongo.ASCENDING)])
+    col.create_index([('category._id', pymongo.ASCENDING)])
     col.insert_many(products)
 
     # create and migrate orders collection
@@ -90,4 +114,7 @@ def migrate(db, mongo_db):
 
         order['user'] = user
         del order['user_id']
+    col.create_index([('name', pymongo.TEXT)])
+    col.create_index([('user._id', pymongo.ASCENDING)])
+    col.create_index([('created_date', pymongo.ASCENDING)])
     col.insert_many(orders)
