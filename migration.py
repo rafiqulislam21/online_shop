@@ -71,7 +71,8 @@ def migrate(db, mongo_db):
                     if ('parent_id' in category) and (elem['_id'] == category['parent_id']):
                         del category['description']
                         del category['parent_id']
-                        inner_list.append(category)
+                        new_list = inner_list + [category]
+                        list_of_categories.append(new_list)
 
     # create and migrate product collection
     col = mongo_db['product']
@@ -82,9 +83,8 @@ def migrate(db, mongo_db):
         del product['brand_id']
 
         for inner_list in list_of_categories:
-            for elem in inner_list:
-                if elem['_id'] == product['category_id']:
-                    product['category'] = inner_list
+            if (inner_list[-1]['_id'] == product['category_id']):
+                product['category'] = inner_list
         del product['category_id']
 
         reviews = df_review.loc[df_review['product_id'] == product['_id']].drop('product_id', axis=1).to_dict(orient='records')
