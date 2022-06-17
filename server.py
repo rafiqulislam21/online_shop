@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from logging.config import dictConfig
 import pymongo
+from bson.objectid import ObjectId
 
 import pandas as pd
 from faker import Faker
@@ -11,6 +12,9 @@ from config import *
 from migration import *
 from mysql_connector import *
 import datetime
+import json
+import random
+
 
 app = Flask(__name__)
 CORS(app)
@@ -22,8 +26,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 mongo_client = pymongo.MongoClient(mongo_connection_string)
 mongo_db = mongo_client['online_shop_db']
 
+UserRoleCollection = mongo_db['user_role']
+UserCollection = mongo_db['user']
+CategoryCollection = mongo_db['category']
+# ProductOrder = mongo_db['ProductOrder']
+ProductCollection = mongo_db['product']
+ReviewCollection = mongo_db['review']
+BrandCollection = mongo_db['brand']
+OrderCollection = mongo_db['order']
 # ======================generate random data api start====================================
 # initialisation data api---------
+
+
 @app.route('/api/data-init')
 def generate_random_data():
     clear_data()
@@ -58,16 +72,16 @@ def generate_random_data():
     # generated fake categorys------------------
     fake_category = defaultdict(list)
     category_list = [
-        'Electronics', 
-        'Books', 
-        'Beauty', 
+        'Electronics',
+        'Books',
+        'Beauty',
         'Sports',
         'Camera',
         'Smartphones',
         'Laptops',
         'Audio Books',
         'Soccer'
-        ]
+    ]
     for index in range(len(category_list)):
         fake_category["name"].append(category_list[index])
         fake_category["description"].append(fake.paragraph(nb_sentences=3))
@@ -154,7 +168,7 @@ def generate_random_data():
 
 
 # clear all data api--------------
-@app.route('/api/data-clear')
+@app.route('/api/data-clear/sql')
 def clear_data():
     db.session.commit()
     db.drop_all()
@@ -186,30 +200,49 @@ def home():
     return responseJson
 
 # gives list of user for user drowp down list in nav bar(fake login)
-@app.route('/api/users')
-def users():
+
+
+@app.route('/api/users/<string:db>')
+def users(db='sql'):
+
     try:
-        # query to read form database
-        user_list_obj = User.query.all()
         # serialize data to json
         user_list_serialized = []
-        for p in user_list_obj:
 
-            user_role = {
-                "id": p.user_role.id,
-                "role": p.user_role.role,
+        if(db == 'nonsql'):
+            # if db selected as mongo database-------------
+            # user_list_obj = UserCollection.find()
+
+            user_list_obj = UserCollection.aggregate([{
+                "$lookup": {"from": "user_role",
+                            "localField": "user_role_id",
+                            "foreignField": "_id", "as": "user_role"}
+            }])
+            df_users = pd.DataFrame(user_list_obj)
+            df_users.rename(columns={'_id': 'id'}, inplace=True)
+            user_list_serialized = json.loads(
+                df_users.to_json(orient="records", default_handler=str))
+            if user_list_serialized is None:
+                user_list_serialized = []
+        else:
+            # if db selected as sql db database-------------
+            user_list_obj = User.query.all()
+
+            for p in user_list_obj:
+                user_role = {
+                    "id": p.user_role.id,
+                    "role": p.user_role.role,
                 }
-
-            user = {
-                "id": p.id,
-                "first_name": p.first_name,
-                "last_name": p.last_name,
-                "email": p.email,
-                "phone_no": p.phone_no,
-                "user_role_id": p.user_role_id,
-                "user_role": user_role
-            }
-            user_list_serialized.append(user)
+                user = {
+                    "id": p.id,
+                    "first_name": p.first_name,
+                    "last_name": p.last_name,
+                    "email": p.email,
+                    "phone_no": p.phone_no,
+                    "user_role_id": p.user_role_id,
+                    "user_role": user_role
+                }
+                user_list_serialized.append(user)
 
         responseJson = {
             "response": {
@@ -230,14 +263,13 @@ def users():
     return responseJson
 
 
-
-@app.route('/api/products')
-def products():
+@app.route('/api/products/sql')
+def productsSql():
     try:
-        # query to read form database
-        product_list_obj = Product.query.all()
         # serialize data to json
         product_list_serialized = []
+        product_list_obj = Product.query.all()
+
         for p in product_list_obj:
             # query to fetch product by id
             review_list = []
@@ -253,9 +285,9 @@ def products():
                 review_list.append(r_item)
 
             category_serialized = {
-            "id": p.category.id,
-            "name": p.category.name,
-            "description": p.category.description,
+                "id": p.category.id,
+                "name": p.category.name,
+                "description": p.category.description,
             }
             brand_serialized = {
                 "id": p.brand.id,
@@ -298,12 +330,44 @@ def products():
     return responseJson
 
 
-@app.route('/api/products/<int:id>')
-def product(id):
+@app.route('/api/products/nonsql')
+def productsNonSql():
+    try:
+        # serialize data to json
+        product_list_serialized = []
+        product_list_obj = ProductCollection.find()
+
+        df_products = pd.DataFrame(product_list_obj)
+        df_products.rename(columns={'_id': 'id'}, inplace=True)
+        product_list_serialized = json.loads(
+            df_products.to_json(orient="records", default_handler=str))
+        if product_list_serialized is None:
+            product_list_serialized = []
+
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "list of all product",
+                "products": product_list_serialized
+            }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "Product list empty",
+                "products": product_list_serialized
+            }
+        }
+
+    return responseJson
+
+
+@app.route('/api/products/<string:id>/sql')
+def productSql(id):
     try:
         # query to fetch product by id
         product_obj = Product.query.filter_by(id=id).first()
-
         # query to find averge value of the product
         rating_avg = db.session.query(db.func.avg(Review.rating)).filter(
             Review.product_id == id).scalar()
@@ -372,7 +436,41 @@ def product(id):
     return responseJson
 
 
-@app.route('/api/products/<int:id>/available')
+@app.route('/api/products/<int:id>/nonsql')
+def productNonSql(id):
+    product_serialized = {}
+    try:
+        # query to fetch product by id
+        product_obj = ProductCollection.find_one({"_id": id})
+        # find averge value of the product
+        rating_avg = 0
+        if len(product_obj['reviews']) > 0:
+            rating_avg = sum(
+                [item['rating'] for item in product_obj['reviews']]) / len(product_obj['reviews'])
+        product_serialized = product_obj
+        product_serialized["rating"] = rating_avg
+        if product_serialized is None:
+            product_serialized = {}
+
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "single product details",
+                "product": product_serialized
+            }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "No product found",
+                "product": product_serialized
+            }
+        }
+    return responseJson
+
+
+@app.route('/api/products/<string:id>/available')
 def productAvailable(id):
     # query to find if product available or no
     product = Product.query.filter_by(id=id).first()
@@ -451,31 +549,17 @@ def placeOrder():
 #  "user_id": 3
 #  "product_id": 5
 # }
-@app.route('/api/reviews/create', methods=['POST'])
-def reviewCreate():
+@app.route('/api/reviews/create/sql', methods=['POST'])
+def reviewCreateSql():
     if request.method == 'POST':
         try:
             # data from post request
             request_data = request.get_json()
 
             # check if user already review this product
-            alreadyReviewed = Review.query.filter_by(user_id=request_data['user_id'], product_id=request_data['product_id']).first() is not None
-                     
-            # #TODO check if user already buy this product
-            # alreadyBroughtProduct = Order.query.filter_by(user_id=request_data['user_id']).all()
-            
-            # app.logger.info("reviewByUserId============")
-            # app.logger.info(alreadyReviewed)
-            # for item in alreadyBroughtProduct:
-            #     app.logger.info(item.id)
-            #     app.logger.info(item.status)
-            #     app.logger.info(item.created_date)
-            #     app.logger.info("============")
-            #     for i in item.products:
-            #         app.logger.info(i.product_id)
-            #         app.logger.info(i.user_id)
-            #         app.logger.info("===######=========")
-            
+            alreadyReviewed = Review.query.filter_by(
+                user_id=request_data['user_id'], product_id=request_data['product_id']).first() is not None
+
             if alreadyReviewed:
                 responseJson = {
                     "response": {
@@ -510,13 +594,64 @@ def reviewCreate():
     return responseJson
 
 
+@app.route('/api/reviews/create/nonsql', methods=['POST'])
+def reviewCreateNonSql():
+    if request.method == 'POST':
+        try:
+            # data from post request
+            request_data = request.get_json()
+
+            # check if user already review this product
+            alreadyReviewed = False
+            # alreadyReviewed = Review.query.filter_by(user_id=request_data['user_id'], product_id=request_data['product_id']).first() is not None
+            app.logger.info("=======================================")
+            app.logger.info(request_data)
+            if alreadyReviewed:
+                responseJson = {
+                    "response": {
+                        "status": -1,
+                        "message": "You already reviewed this product!"
+                    }
+                }
+            else:
+
+                ProductCollection.update_one(
+                    {"_id": int(request_data['product_id'])},
+                    {"$push": {
+                        "reviews": {
+                            "_id": random.randint(1, 10000),
+                            "description": request_data['description'],
+                            "rating": request_data['rating'],
+                            "user_id": request_data['user_id'],
+                            "user_first_name": request_data['first_name'],
+                            "user_last_name": request_data['last_name'],
+                            "created_date": datetime.datetime.now()}}
+                     }, upsert=True
+                )
+
+                responseJson = {
+                    "response": {
+                        "status": 1,
+                        "message": "Review created successfully!"
+                    }
+                }
+        except:
+            responseJson = {
+                "response": {
+                    "status": -1,
+                    "message": "Something went wrong!"
+                }
+            }
+    return responseJson
+
+
 # request demo
 # {
 #  "description": "some description here",
 #  "rating":4
 # }
-@app.route('/api/reviews/<int:id>', methods=['PATCH'])
-def reviewUpdate(id):
+@app.route('/api/reviews/<int:id>/sql', methods=['PATCH'])
+def reviewUpdateSql(id):
     if request.method == 'PATCH':
         try:
             # data from put request
@@ -545,14 +680,77 @@ def reviewUpdate(id):
     return responseJson
 
 
-@app.route('/api/reviews/<int:id>', methods=['DELETE'])
-def reviewDelete(id):
+@app.route('/api/reviews/<int:id>/nonsql', methods=['PATCH'])
+def reviewUpdateNonSql(id):
+    if request.method == 'PATCH':
+        try:
+            # data from put request
+            request_data = request.get_json()
+
+            ProductCollection.update_one(
+                {"_id": int(request_data['product_id']), "reviews._id": id},
+                {"$set":
+                    {
+                        "reviews.$.description": request_data['description'],
+                        "reviews.$.rating": request_data['rating'],
+                        "reviews.$.created_date": datetime.datetime.now()
+                    }
+                 })
+            responseJson = {
+                "response": {
+                    "status": 1,
+                    "message": "Review updated successfully!"
+                }
+            }
+        except:
+            responseJson = {
+                "response": {
+                    "status": -1,
+                    "message": "Something went wrong!"
+                }
+            }
+    return responseJson
+
+
+@app.route('/api/reviews/<string:id>/sql', methods=['DELETE'])
+def reviewDeleteSql(id):
     if request.method == 'DELETE':
         try:
             review = Review.query.filter_by(id=id).first()
             if review:
                 db.session.delete(review)
                 db.session.commit()
+
+            responseJson = {
+                "response": {
+                    "status": 1,
+                    "message": "Review deleted successfully!"
+                }
+            }
+        except:
+            responseJson = {
+                "response": {
+                    "status": -1,
+                    "message": "Something went wrong!"
+                }
+            }
+        return responseJson
+
+
+@app.route('/api/reviews/<string:id>/nonsql', methods=['DELETE'])
+def reviewDeleteNonSql(id):
+
+    if request.method == 'DELETE':
+        try:
+            # data from put request
+            request_data = request.get_json()
+            ProductCollection.update_one(
+                    {"_id": int(request_data['product_id'])},
+                    {"$pull":
+                        {"reviews": {
+                            "_id": int(id)
+                        }}
+                    })
 
             responseJson = {
                 "response": {
@@ -577,12 +775,14 @@ def report1():
 
     try:
         # get products that added between now and one year ago from database
-        product_list_obj = Product.query.filter(Product.created_date > one_year_ago).all()
+        product_list_obj = Product.query.filter(
+            Product.created_date > one_year_ago).all()
         # serialize data to json
         product_list_serialized = []
         for p in product_list_obj:
             # query to find averge value of the product
-            rating_avg = db.session.query(db.func.avg(Review.rating)).filter(Review.product_id == p.id).scalar()
+            rating_avg = db.session.query(db.func.avg(Review.rating)).filter(
+                Review.product_id == p.id).scalar()
             if rating_avg == None:
                 rating_avg = 0.0
 
@@ -599,9 +799,9 @@ def report1():
                 review_list.append(r_item)
 
             category_serialized = {
-            "id": p.category.id,
-            "name": p.category.name,
-            "description": p.category.description,
+                "id": p.category.id,
+                "name": p.category.name,
+                "description": p.category.description,
             }
             brand_serialized = {
                 "id": p.brand.id,
@@ -621,12 +821,13 @@ def report1():
                 "category_id": p.category_id,
                 "category": category_serialized,
                 "brand": brand_serialized,
-                "rating_avg":rating_avg
+                "rating_avg": rating_avg
             }
             product_list_serialized.append(p_item)
 
         # sort product list by averge rating decending order
-        product_list_serialized.sort(key=lambda x: x["rating_avg"], reverse=True)
+        product_list_serialized.sort(
+            key=lambda x: x["rating_avg"], reverse=True)
         responseJson = {
             "response": {
                 "status": 1,
@@ -694,7 +895,7 @@ def productAdd():
 #  "brand_id": 1,
 # "category_id":2
 # }
-@app.route('/api/admin/products/<int:id>', methods=['PATCH'])
+@app.route('/api/admin/products/<string:id>', methods=['PATCH'])
 def productUpdate(id):
     if request.method == 'PATCH':
         try:
@@ -728,7 +929,7 @@ def productUpdate(id):
     return responseJson
 
 
-@app.route('/api/admin/products/<int:id>', methods=['DELETE'])
+@app.route('/api/admin/products/<string:id>', methods=['DELETE'])
 def productDelete(id):
     if request.method == 'DELETE':
         try:
@@ -757,7 +958,7 @@ def productDelete(id):
 # {
 #     "status": "delivered"
 # }
-@app.route('/api/admin/orders/<int:id>', methods=['PATCH'])
+@app.route('/api/admin/orders/<string:id>', methods=['PATCH'])
 def orderUpdate(id):
     if request.method == 'PATCH':
         try:
@@ -787,7 +988,7 @@ def orderUpdate(id):
     return responseJson
 
 
-@app.route('/api/admin/orders/<int:id>', methods=['DELETE'])
+@app.route('/api/admin/orders/<string:id>', methods=['DELETE'])
 def orderDelete(id):
     if request.method == 'DELETE':
         try:
@@ -814,8 +1015,9 @@ def orderDelete(id):
 
 # ======================data migration start======================================
 
+
 @app.route('/api/migrate')
-def migrate_data():    
+def migrate_data():
     migrate(db, mongo_db)
 
     responseJson = {
@@ -826,7 +1028,8 @@ def migrate_data():
     }
     return responseJson
 
-@app.route('/api/clear-mongodb')
+
+@app.route('/api/data-clear/nonsql')
 def clear_mongodb():
     reset_mongo_db(mongo_db)
 
@@ -838,6 +1041,7 @@ def clear_mongodb():
     }
     return responseJson
 # ======================data migration end======================================
+
 
 # ---------------main-----------------------------------------------------------
 if __name__ == '__main__':

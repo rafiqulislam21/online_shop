@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from 'react';
 import '../App.css';
 import CardHorizontal from '../components/CardHorizontal';
 import { CartContext } from "../contexts/CartContext";
-import { UserContext } from "../contexts/UserContext";
 
 function Cart() {
   useEffect(() => {
@@ -10,7 +9,7 @@ function Cart() {
   });
 
   const [selectedProducts, setSelectedProducts] = useContext(CartContext);
-  const [loggedUser, setLoggedUser] = useContext(UserContext);
+  const [loggedUser, setLoggedUser] = useState(JSON.parse(localStorage.getItem('loggedUser')));
   const [totalPrice, setTotalPrice] = useState(0);
 
   function calculateTotal() {

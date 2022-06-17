@@ -10,12 +10,12 @@ function Shop() {
   const [products, setProducts] = useContext(ShopContext);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
-
+  const [database, setDatabase] = useState(JSON.parse(localStorage.getItem('database')));
 
 
   const fetchItems = async () => {
 
-    fetch('http://localhost:5000/api/products')
+    fetch('http://localhost:5000/api/products/'+database)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
@@ -60,7 +60,7 @@ function Shop() {
           {products.map(product => (
             //single product
             <Card
-              key={product.id}
+              key={product.name}
               value={product}
             />
           ))}

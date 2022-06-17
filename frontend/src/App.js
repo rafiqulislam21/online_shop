@@ -9,14 +9,12 @@ import Cart from "./pages/Cart";
 import Report1 from "./pages/Report1";
 
 
-import { UserProvider } from "./contexts/UserContext";
 import { ShopProvider } from "./contexts/ShopContext";
 import { ProductProvider } from "./contexts/ProductContext";
 import { CartProvider } from "./contexts/CartContext";
 
 function App() {
   return (
-    <UserProvider>
       <ShopProvider>
         <ProductProvider>
           <CartProvider>
@@ -37,7 +35,6 @@ function App() {
           </CartProvider>
         </ProductProvider>
       </ShopProvider>
-    </UserProvider>
   );
 }
 
