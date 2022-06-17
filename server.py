@@ -363,7 +363,7 @@ def productsNonSql():
     return responseJson
 
 
-@app.route('/api/products/<string:id>/sql')
+@app.route('/api/products/<int:id>/sql')
 def productSql(id):
     try:
         # query to fetch product by id
@@ -470,7 +470,7 @@ def productNonSql(id):
     return responseJson
 
 
-@app.route('/api/products/<string:id>/available')
+@app.route('/api/products/<int:id>/available')
 def productAvailable(id):
     # query to find if product available or no
     product = Product.query.filter_by(id=id).first()
@@ -712,7 +712,7 @@ def reviewUpdateNonSql(id):
     return responseJson
 
 
-@app.route('/api/reviews/<string:id>/sql', methods=['DELETE'])
+@app.route('/api/reviews/<int:id>/sql', methods=['DELETE'])
 def reviewDeleteSql(id):
     if request.method == 'DELETE':
         try:
@@ -737,7 +737,7 @@ def reviewDeleteSql(id):
         return responseJson
 
 
-@app.route('/api/reviews/<string:id>/nonsql', methods=['DELETE'])
+@app.route('/api/reviews/<int:id>/nonsql', methods=['DELETE'])
 def reviewDeleteNonSql(id):
 
     if request.method == 'DELETE':
@@ -748,7 +748,7 @@ def reviewDeleteNonSql(id):
                     {"_id": int(request_data['product_id'])},
                     {"$pull":
                         {"reviews": {
-                            "_id": int(id)
+                            "_id": id
                         }}
                     })
 
@@ -895,7 +895,7 @@ def productAdd():
 #  "brand_id": 1,
 # "category_id":2
 # }
-@app.route('/api/admin/products/<string:id>', methods=['PATCH'])
+@app.route('/api/admin/products/<int:id>', methods=['PATCH'])
 def productUpdate(id):
     if request.method == 'PATCH':
         try:
@@ -929,7 +929,7 @@ def productUpdate(id):
     return responseJson
 
 
-@app.route('/api/admin/products/<string:id>', methods=['DELETE'])
+@app.route('/api/admin/products/<int:id>', methods=['DELETE'])
 def productDelete(id):
     if request.method == 'DELETE':
         try:
@@ -958,7 +958,7 @@ def productDelete(id):
 # {
 #     "status": "delivered"
 # }
-@app.route('/api/admin/orders/<string:id>', methods=['PATCH'])
+@app.route('/api/admin/orders/<int:id>', methods=['PATCH'])
 def orderUpdate(id):
     if request.method == 'PATCH':
         try:
@@ -988,7 +988,7 @@ def orderUpdate(id):
     return responseJson
 
 
-@app.route('/api/admin/orders/<string:id>', methods=['DELETE'])
+@app.route('/api/admin/orders/<int:id>', methods=['DELETE'])
 def orderDelete(id):
     if request.method == 'DELETE':
         try:
