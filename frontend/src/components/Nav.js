@@ -32,10 +32,13 @@ function Nav() {
   }
 
   function migrateData() {
-    fetch('http://localhost:5000/api/api/migrate', { method: 'GET' })
+    fetch('http://localhost:5000/api/clear-mongodb', { method: 'GET' })
       .then(json => {
-        alert("DB Migrated!")
-        // window.location.reload()
+        fetch('http://localhost:5000/api/migrate', { method: 'GET' })
+          .then(json => {        
+            alert("DB Migrated!")
+            // window.location.reload()
+          })
       })
   }
 
@@ -74,16 +77,6 @@ function Nav() {
         </button>
         <div className="collapse navbar-collapse" id="navbarText">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            <li className="nav-item">
-              <Link className="nav-link active" to="/">
-                Home
-              </Link>
-            </li>
-            <li className="nav-item">
-              <Link className="nav-link" to="/shop">
-                Shop
-              </Link>
-            </li>
             <li className="nav-item">
               <Link className="nav-link" to="/about">
                 About

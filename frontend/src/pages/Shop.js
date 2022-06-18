@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useContext } from 'react';
-import Card from '../components/Card';
-import '../App.css';
-// import {Link} from 'react-router-dom';
+import React, { useState, useEffect, useContext } from "react";
+import Card from "../components/Card";
+import "../App.css";
+
 import { ShopContext } from "../contexts/ShopContext";
+import { UserContext } from "../contexts/UserContext";
+import { Link } from "react-router-dom";
+
 function Shop() {
   useEffect(() => {
     fetchItems();
   }, []);
+
   const [products, setProducts] = useContext(ShopContext);
+  const [user, setUser] = useContext(UserContext);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-
-
   const fetchItems = async () => {
-
-    fetch('http://localhost:5000/api/products')
-      .then(res => res.json())
+    fetch("http://localhost:5000/api/products")
+      .then((res) => res.json())
       .then(
         (jsonResponse) => {
           setIsLoaded(true);
@@ -27,8 +29,8 @@ function Shop() {
           setIsLoaded(true);
           setError(error);
         }
-      )
-  }
+      );
+  };
 
   if (error) {
     // return <div>Error: {error.message}</div>;
@@ -49,23 +51,41 @@ function Shop() {
     );
   }
   return (
-    (!products.length)
-      ? <h1 className="display-4 text-muted text-center">No products available!</h1>
-      : <div className="container">
-        <br></br>
-        <h4 className="my-4">Products({products.length})</h4>
-        <hr></hr>
-        <div className="row row-cols-1 row-cols-md-3 g-5">
-          {/* product list loop here */}
-          {products.map(product => (
-            //single product
-            <Card
-              key={product.id}
-              value={product}
-            />
-          ))}
+    <div className="container">
+      <br></br>
+      <div className="row align-items-center justify-content-between">
+        <div className="col">
+          <h4 className="my-4">
+            Products {products.length ? products.length : ""}
+          </h4>
+        </div>
+        <div className="col-auto">
+          {user.user_role.role == "admin" ? (
+            <Link to="/product/add">
+              <button type="button" className="btn btn-primary">
+                Add product
+              </button>
+            </Link>
+          ) : (
+            <></>
+          )}
         </div>
       </div>
+      <hr></hr>
+      {!products.length ? (
+        <h1 className="display-4 text-muted text-center">
+          No products available!
+        </h1>
+      ) : (
+        <div className="row row-cols-1 row-cols-md-3 g-5">
+          {/* product list loop here */}
+          {products.map((product) => (
+            //single product
+            <Card key={product.id} value={product} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

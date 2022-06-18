@@ -30,7 +30,7 @@ def generate_random_data():
     num_of_user = 5
     num_of_product = 10
     num_of_review = 10
-    num_of_order = 10
+    num_of_order = 20
 
     fake = Faker()
 
@@ -810,6 +810,73 @@ def orderDelete(id):
                 }
             }
     return responseJson
+
+@app.route('/api/brands')
+def brands():
+    try:
+        # query to read form database
+        brand_list_obj = Brand.query.all()
+        # serialize data to json
+        brand_list_serialized = []
+        for b in brand_list_obj:
+            brand_serialized = {
+                "id": b.id,
+                "name": b.name
+            }
+
+            brand_list_serialized.append(brand_serialized)
+
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "list of all brands",
+                "brands": brand_list_serialized
+            }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "Brands list empty",
+                "brands": brand_list_serialized
+            }
+        }
+
+    return responseJson
+
+@app.route('/api/categories')
+def categories():
+    try:
+        # query to read form database
+        category_list_obj = Category.query.all()
+        # serialize data to json
+        category_list_serialized = []
+        for c in category_list_obj:
+            category_serialized = {
+                "id": c.id,
+                "name": c.name
+            }
+
+            category_list_serialized.append(category_serialized)
+
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "list of all categories",
+                "categories": category_list_serialized
+            }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "Category list empty",
+                "categories": category_list_serialized
+            }
+        }
+
+    return responseJson
+
 # =============================api end============================================
 
 # ======================data migration start======================================
