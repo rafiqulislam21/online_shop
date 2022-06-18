@@ -12,7 +12,7 @@
     - sql: `localhost:5000/api/data-init`
 - To clear database visit this url (or there is button in frontend):                 
     - sql: `localhost:5000/api/data-clear/sql`
-    - Mongodb: `localhost:5000/api/data-clear/nonsql`
+    - Mongodb: `localhost:5000/api/data-clear/nosql`
 
 ### Frontend:
 - Go to frontend folder(`\online_shop\frontend>`) and run command: `npm install`
@@ -22,7 +22,7 @@
 
 ### Recent changes
 - api structure changed sample `localhost:5000/api/.....`
-- main case sql/nonsql part done with forntend
+- main case sql/nosql part done with forntend
 
 ## Todo: 
 - *Docker*

@@ -62,7 +62,7 @@ function Shop() {
           </h4>
         </div>
         <div className="col-auto">
-          {user.user_role.role == "admin" ? (
+          {user.user_role === "admin" ? (
             <Link to="/product/add">
               <button type="button" className="btn btn-primary">
                 Add product
@@ -83,7 +83,7 @@ function Shop() {
           {/* product list loop here */}
           {products.map((product) => (
             //single product
-            <Card key={product.name} value={product} />
+            <Card key={product.id} value={product} />
           ))}
         </div>
       )}

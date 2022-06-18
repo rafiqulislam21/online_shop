@@ -209,17 +209,12 @@ def users(db='sql'):
         # serialize data to json
         user_list_serialized = []
 
-        if(db == 'nonsql'):
+        if(db == 'nosql'):
             # if db selected as mongo database-------------
-            # user_list_obj = UserCollection.find()
-
-            user_list_obj = UserCollection.aggregate([{
-                "$lookup": {"from": "user_role",
-                            "localField": "user_role_id",
-                            "foreignField": "_id", "as": "user_role"}
-            }])
+            user_list_obj = UserCollection.find()
             df_users = pd.DataFrame(user_list_obj)
             df_users.rename(columns={'_id': 'id'}, inplace=True)
+            df_users.rename(columns={'role_name': 'user_role'}, inplace=True)
             user_list_serialized = json.loads(
                 df_users.to_json(orient="records", default_handler=str))
             if user_list_serialized is None:
@@ -229,10 +224,6 @@ def users(db='sql'):
             user_list_obj = User.query.all()
 
             for p in user_list_obj:
-                user_role = {
-                    "id": p.user_role.id,
-                    "role": p.user_role.role,
-                }
                 user = {
                     "id": p.id,
                     "first_name": p.first_name,
@@ -240,7 +231,7 @@ def users(db='sql'):
                     "email": p.email,
                     "phone_no": p.phone_no,
                     "user_role_id": p.user_role_id,
-                    "user_role": user_role
+                    "user_role": p.user_role.role
                 }
                 user_list_serialized.append(user)
 
@@ -330,8 +321,8 @@ def productsSql():
     return responseJson
 
 
-@app.route('/api/products/nonsql')
-def productsNonSql():
+@app.route('/api/products/nosql')
+def productsNoSql():
     try:
         # serialize data to json
         product_list_serialized = []
@@ -436,15 +427,15 @@ def productSql(id):
     return responseJson
 
 
-@app.route('/api/products/<int:id>/nonsql')
-def productNonSql(id):
+@app.route('/api/products/<int:id>/nosql')
+def productNoSql(id):
     product_serialized = {}
     try:
         # query to fetch product by id
         product_obj = ProductCollection.find_one({"_id": id})
         # find averge value of the product
         rating_avg = 0
-        if len(product_obj['reviews']) > 0:
+        if ('reviews' in product_obj) and (len(product_obj['reviews']) > 0):
             rating_avg = sum(
                 [item['rating'] for item in product_obj['reviews']]) / len(product_obj['reviews'])
         product_serialized = product_obj
@@ -594,8 +585,8 @@ def reviewCreateSql():
     return responseJson
 
 
-@app.route('/api/reviews/create/nonsql', methods=['POST'])
-def reviewCreateNonSql():
+@app.route('/api/reviews/create/nosql', methods=['POST'])
+def reviewCreateNoSql():
     if request.method == 'POST':
         try:
             # data from post request
@@ -680,8 +671,8 @@ def reviewUpdateSql(id):
     return responseJson
 
 
-@app.route('/api/reviews/<int:id>/nonsql', methods=['PATCH'])
-def reviewUpdateNonSql(id):
+@app.route('/api/reviews/<int:id>/nosql', methods=['PATCH'])
+def reviewUpdateNoSql(id):
     if request.method == 'PATCH':
         try:
             # data from put request
@@ -737,8 +728,8 @@ def reviewDeleteSql(id):
         return responseJson
 
 
-@app.route('/api/reviews/<int:id>/nonsql', methods=['DELETE'])
-def reviewDeleteNonSql(id):
+@app.route('/api/reviews/<int:id>/nosql', methods=['DELETE'])
+def reviewDeleteNoSql(id):
 
     if request.method == 'DELETE':
         try:
@@ -854,8 +845,8 @@ def report1():
 # "is_active": true,
 # "brand_id": 1,
 # "category_id":1}
-@app.route('/api/admin/products/add', methods=['POST'])
-def productAdd():
+@app.route('/api/admin/products/add/sql', methods=['POST'])
+def productAddSql():
     if request.method == 'POST':
         try:
             request_data = request.get_json()
@@ -866,7 +857,8 @@ def productAdd():
                 price=request_data['price'],
                 is_active=request_data['is_active'],
                 brand_id=request_data['brand_id'],
-                category_id=request_data['category_id']
+                category_id=request_data['category_id'],
+                created_date=datetime.datetime.now()
             )
             db.session.add(single_product)
             db.session.commit()
@@ -882,6 +874,47 @@ def productAdd():
                 "response": {
                     "status": -1,
                     "message": "Something went wrong!"
+                }
+            }
+    return responseJson
+
+@app.route('/api/admin/products/add/nosql', methods=['POST'])
+def productAddNoSql():
+    if request.method == 'POST':
+        try:
+            # data from post request
+            request_data = request.get_json()
+            app.logger.info(request_data)
+
+            index = ProductCollection.find().sort("_id",-1).limit(1)[0]["_id"]
+
+            brand = {
+                "_id": request_data['brand_id'],
+                "name": request_data['brand_name'],
+            }
+
+            ProductCollection.insert_one({
+                "_id": index + 1,
+                "name":request_data['name'],
+                "description":request_data['description'],
+                "price":request_data['price'],
+                "is_active":request_data['is_active'],
+                "brand":brand,
+                "category":request_data['category'],
+                "created_date": datetime.datetime.now()
+            })
+
+            responseJson = {
+                "response": {
+                    "status": 1,
+                    "message": "Product created successfully!"
+                }
+            }
+        except Exception as err:
+            responseJson = {
+                "response": {
+                    "status": -1,
+                    "message": str(err)
                 }
             }
     return responseJson
@@ -1012,8 +1045,8 @@ def orderDelete(id):
             }
     return responseJson
 
-@app.route('/api/brands')
-def brands():
+@app.route('/api/brands/sql')
+def brandsSql():
     try:
         # query to read form database
         brand_list_obj = Brand.query.all()
@@ -1045,8 +1078,42 @@ def brands():
 
     return responseJson
 
-@app.route('/api/categories')
-def categories():
+@app.route('/api/brands/nosql')
+def brandsNoSql():
+    try:
+        # query to read form database
+        brand_list_obj = BrandCollection.find()
+        # serialize data to json
+        brand_list_serialized = []
+
+        df_brands = pd.DataFrame(brand_list_obj)[["_id", "name"]]
+        df_brands.rename(columns={'_id': 'id'}, inplace=True)
+        brand_list_serialized = json.loads(
+            df_brands.to_json(orient="records", default_handler=str))
+        if brand_list_serialized is None:
+            brand_list_serialized = []
+
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "list of all brands",
+                "brands": brand_list_serialized
+            }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "Brands list empty",
+                "brands": brand_list_serialized
+            }
+        }
+
+    return responseJson
+
+
+@app.route('/api/categories/sql')
+def categoriesSql():
     try:
         # query to read form database
         category_list_obj = Category.query.all()
@@ -1078,6 +1145,94 @@ def categories():
 
     return responseJson
 
+@app.route('/api/categories/nosql')
+def categoriesNosql():
+    try:
+        # query to read form database
+        category_list_obj = CategoryCollection.find()
+        # serialize data to json
+        category_list_serialized = []
+
+        df_categories = pd.DataFrame(category_list_obj)[["_id", "name", "parent_id"]]
+        df_categories.rename(columns={'_id': 'id'}, inplace=True)
+        category_list_serialized = json.loads(
+            df_categories.to_json(orient="records", default_handler=str))
+        if category_list_serialized is None:
+            category_list_serialized = []
+
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "list of all categories",
+                "categories": category_list_serialized
+            }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "Category list empty",
+                "categories": category_list_serialized
+            }
+        }
+
+    return responseJson
+
+
+@app.route('/api/report-2')
+def report2():
+    try:
+        records = []
+        for record in db.engine.execute(
+            '''
+            with popular_products AS( 
+                SELECT p.name, sum(po.amount) AS amount, p.category_id, max(o.created_date) AS created_date FROM `order` o 
+                INNER JOIN product_order po ON po.order_id = o.id 
+                INNER JOIN product p ON p.id = po.product_id 
+                WHERE o.created_date BETWEEN '2021-01-01' and DATE_ADD('2021-01-01', interval 1 year) 
+                GROUP BY p.name 
+                ), 
+            popular_categories AS( 
+                SELECT id, c.name, sum(amount) AS amount FROM popular_products 
+                INNER JOIN category c ON c.id = popular_products.category_id 
+                GROUP BY category_id 
+                ORDER BY SUM(amount) DESC 
+                ), 
+            most_popular_product AS( 
+                SELECT popular_products.name, MAX(amount), category_id FROM popular_products 
+                GROUP BY category_id 
+                ), 
+            most_resent_product AS( 
+                SELECT popular_products.name, MAX(created_date) AS created_date, category_id FROM popular_products 
+                GROUP BY category_id 
+                ) 
+                
+            SELECT popular_categories.name AS category_name, popular_categories.amount, 
+            most_popular_product.name AS popular_product_name, most_resent_product.name AS resent_product_name,  
+            most_resent_product.created_date  
+            FROM popular_categories 
+            INNER JOIN most_popular_product ON most_popular_product.category_id = popular_categories.id 
+            INNER JOIN most_resent_product ON most_resent_product.category_id = popular_categories.id
+            '''
+        ):
+            records.append(record)
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "list of all product",
+                "products": records
+            }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "Product list empty",
+                "products": []
+            }
+        }
+    return responseJson
+
 # =============================api end============================================
 
 # ======================data migration start======================================
@@ -1096,7 +1251,7 @@ def migrate_data():
     return responseJson
 
 
-@app.route('/api/data-clear/nonsql')
+@app.route('/api/data-clear/nosql')
 def clear_mongodb():
     reset_mongo_db(mongo_db)
 
