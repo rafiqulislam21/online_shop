@@ -2,13 +2,13 @@ import React, { useState, useEffect, useContext } from 'react';
 import '../App.css';
 import ReactStars from "react-rating-stars-component";
 // import {Link} from 'react-router-dom';
-import { UserContext } from "../contexts/UserContext";
 
 function Review(props) {
   const [reviewTxt, setReviewTxt] = useState(props?.value?.description ?? "");
   const [reviewStr, setReviewStr] = useState(props?.value?.rating ?? 0);
   const [showEditSection, setshowEditSection] = React.useState(false);
-  const [loggedUser, setLoggedUser] = useContext(UserContext);
+  const [loggedUser, setLoggedUser] = useState(JSON.parse(localStorage.getItem('loggedUser')));
+  const [database, setDatabase] = useState(JSON.parse(localStorage.getItem('database')));
 
 
   const changeEditVisibility = () => setshowEditSection(!showEditSection);
@@ -27,12 +27,16 @@ function Review(props) {
   };
 
   const deleteReview = async () => {
-    var reviewId = (props.value.id)
+    var reviewId = (props?.value?.id??props?.value?._id)
     // console.log(props.value)
     const requestOptions = {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "product_id": props?.value?.product_id,
+      })
     };
-    fetch(`http://localhost:5000/api/reviews/${reviewId}`, requestOptions)
+    fetch(`http://localhost:5000/api/reviews/${reviewId}/${database}`, requestOptions)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
@@ -46,7 +50,7 @@ function Review(props) {
       )
   }
   const updateReview = async () => {
-    var reviewId = (props.value.id)
+    var reviewId = (props?.value?.id??props?.value?._id)
     const requestOptions = {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -54,10 +58,12 @@ function Review(props) {
         "description": reviewTxt,
         "rating": reviewStr,
         "user_id": loggedUser.id,
-        "product_id": props.value.product_id
+        "product_id": props?.value?.product_id,
+        "first_name": loggedUser.first_name,
+        "last_name": loggedUser.last_name
       })
     };
-    fetch(`http://localhost:5000/api/reviews/${reviewId}`, requestOptions)
+    fetch(`http://localhost:5000/api/reviews/${reviewId}/${database}`, requestOptions)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
@@ -76,7 +82,7 @@ function Review(props) {
       <div className="row mb-4">
         <h1 className="col-1"><i className="bi bi-person-circle"></i> </h1>
         <div className="col-11">
-          <h6>{props.value.user.first_name} <small className="text-muted">&nbsp;&nbsp;&nbsp;&nbsp; {props.value.created_date}</small></h6>
+          <h6>{props?.value?.user?.first_name??props?.value?.user_first_name} <small className="text-muted">&nbsp;&nbsp;&nbsp;&nbsp; {props.value.created_date}</small></h6>
           {!showEditSection ?
             <div>
               <p className="font-weight-light text-muted p-0 m-0">Rating: {props.value.rating} <i className="bi bi-star-fill"></i></p>

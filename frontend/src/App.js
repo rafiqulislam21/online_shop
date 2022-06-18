@@ -1,3 +1,4 @@
+import React, { Component }  from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
 import Nav from './components/Nav';
@@ -10,14 +11,12 @@ import Report1 from "./pages/Report1";
 import AddProduct from "./pages/AddProduct";
 
 
-import { UserProvider } from "./contexts/UserContext";
 import { ShopProvider } from "./contexts/ShopContext";
 import { ProductProvider } from "./contexts/ProductContext";
 import { CartProvider } from "./contexts/CartContext";
 
 function App() {
   return (
-    <UserProvider>
       <ShopProvider>
         <ProductProvider>
           <CartProvider>
@@ -39,7 +38,6 @@ function App() {
           </CartProvider>
         </ProductProvider>
       </ShopProvider>
-    </UserProvider>
   );
 }
 

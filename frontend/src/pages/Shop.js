@@ -3,21 +3,23 @@ import Card from "../components/Card";
 import "../App.css";
 
 import { ShopContext } from "../contexts/ShopContext";
-import { UserContext } from "../contexts/UserContext";
 import { Link } from "react-router-dom";
 
 function Shop() {
   useEffect(() => {
     fetchItems();
+    setUser(JSON.parse(localStorage.getItem('loggedUser')));
+    setDatabase(JSON.parse(localStorage.getItem("database")));
   }, []);
 
   const [products, setProducts] = useContext(ShopContext);
-  const [user, setUser] = useContext(UserContext);
+  const [user, setUser] = useState(JSON.parse(localStorage.getItem('loggedUser')));
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [database, setDatabase] = useState(JSON.parse(localStorage.getItem("database")));
 
   const fetchItems = async () => {
-    fetch("http://localhost:5000/api/products")
+    fetch("http://localhost:5000/api/products/" + database)
       .then((res) => res.json())
       .then(
         (jsonResponse) => {
@@ -81,7 +83,7 @@ function Shop() {
           {/* product list loop here */}
           {products.map((product) => (
             //single product
-            <Card key={product.id} value={product} />
+            <Card key={product.name} value={product} />
           ))}
         </div>
       )}

@@ -4,7 +4,6 @@ import Review from '../components/Review';
 import ReactStars from "react-rating-stars-component";
 import { ProductContext } from "../contexts/ProductContext";
 import { CartContext } from "../contexts/CartContext";
-import { UserContext } from "../contexts/UserContext";
 
 import '../App.css';
 
@@ -12,11 +11,12 @@ function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useContext(ProductContext);
   const [selectedProducts, setSelectedProducts] = useContext(CartContext);
-  const [loggedUser, setLoggedUser] = useContext(UserContext);
+  const [loggedUser, setLoggedUser] = useState(JSON.parse(localStorage.getItem('loggedUser')));
   const [reviewTxt, setReviewTxt] = useState("");
   const [reviewStr, setReviewStr] = useState(0);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [database, setDatabase] = useState(JSON.parse(localStorage.getItem('database')));
 
   useEffect(() => {
     fetchItems();
@@ -36,12 +36,15 @@ function ProductDetail() {
   };
 
   const fetchItems = async () => {
-    fetch('http://localhost:5000/api/products/' + id)
+    fetch(`http://localhost:5000/api/products/${id}/${database}`)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
           setIsLoaded(true);
           // console.log(jsonResponse);
+          jsonResponse.response.product.reviews.forEach(async (r) => {
+            r.product_id=parseInt(id);
+          });
           setProduct(jsonResponse.response.product);
         },
         (error) => {
@@ -72,9 +75,6 @@ function ProductDetail() {
 
   const postComment = async () => {
     // POST request using fetch with error handling
-    console.log(loggedUser);
-    // console.log(loggedUser.first_name);
-    // console.log(loggedUser.id);
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -82,10 +82,12 @@ function ProductDetail() {
         "description": reviewTxt,
         "rating": reviewStr,
         "user_id": loggedUser.id,
+        "first_name": loggedUser.first_name,
+        "last_name": loggedUser.last_name,
         "product_id": id
       })
     };
-    fetch('http://localhost:5000/api/reviews/create', requestOptions)
+    fetch(`http://localhost:5000/api/reviews/create/${database}`, requestOptions)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
@@ -128,7 +130,7 @@ function ProductDetail() {
           <img src="/no-image.jpg" className="img-responsive fit-image" alt=""></img>
         </div>
         <div className="col-md-4">
-          <p className="text-uppercase text-info mb-0 mt-2">Category: {product.category.name}</p>
+          <p className="text-uppercase text-info mb-0 mt-2">Category: {product?.category?.name??product?.category[0]?.name}</p>
           <p className="text m-0">Brand: {product.brand.name}</p>
           <h1 className="display-6 my-4">{product.name}</h1>
           <p className="text-muted">
@@ -203,7 +205,7 @@ function ProductDetail() {
         {product.reviews.map(review => (
           // <h1>{review.user.first_name}</h1>
           <Review
-            key={review.id}
+            key={review.created_date}
             value={review}
           />
         ))}

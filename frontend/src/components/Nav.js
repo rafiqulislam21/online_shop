@@ -2,13 +2,17 @@ import React, { useState, useEffect, useContext } from 'react';
 import '../App.css';
 import { Link } from 'react-router-dom';
 import { CartContext } from "../contexts/CartContext";
-import { UserContext } from "../contexts/UserContext";
+import { ShopContext } from "../contexts/ShopContext";
 
 
 function Nav() {
   const [selectedProducts, setSelectedProducts] = useContext(CartContext);
+  const [products, setProducts] = useContext(ShopContext);
   const [users, setUsers] = useState([]);
-  const [loggedUser, setLoggedUser] = useContext(UserContext);
+  const [database, setDatabase] = useState(JSON.parse(localStorage.getItem('database')));
+  const [loggedUser, setLoggedUser] = useState(JSON.parse(localStorage.getItem('loggedUser')));
+  const [loggedUserIndex, setLoggedUserIndex] = useState(JSON.parse(localStorage.getItem('loggedUserIndex')));
+  // const [loggedUser, setLoggedUser] = useContext(UserContext);
 
   useEffect(() => {
     fetchUsers();
@@ -24,7 +28,7 @@ function Nav() {
   }
 
   function clrData() {
-    fetch('http://localhost:5000/api/data-clear', { method: 'GET' })
+    fetch('http://localhost:5000/api/data-clear/'+database, { method: 'GET' })
       .then(json => {
         alert("Data Cleared!")
         window.location.reload()
@@ -44,24 +48,57 @@ function Nav() {
 
   const userChange = (e) => {
     // console.log(users[e.target.value])
-    setLoggedUser(users[e.target.value]);
+    // setLoggedUser(users[e.target.value]);
+    localStorage.setItem('loggedUser', JSON.stringify(users[e.target.value]));
+    localStorage.setItem('loggedUserIndex', JSON.stringify(e.target.value));
+    const userLocal = JSON.parse(localStorage.getItem('loggedUser'));
+    const userLocalIndex = JSON.parse(localStorage.getItem('loggedUserIndex'));
+    if (userLocal) {
+      setLoggedUser(userLocal);
+      setLoggedUserIndex(userLocalIndex);
+      window.location.reload()
+    }
+
+  };
+
+  const  databaseChange = (e) => {
+    // console.log(users[e.target.value])
+    localStorage.setItem('database', JSON.stringify(e.target.value));
+    const dbLocal = JSON.parse(localStorage.getItem('database'));
+    if (dbLocal) {
+      setDatabase(dbLocal);
+      
+    }
+    
+    if(products?.length > 0){
+      if(dbLocal == 'nonsql') {
+        fetch('http://localhost:5000/api/data-clear/nonsql')
+        .then(json => {
+          fetch('http://localhost:5000/api/migrate').then(json => {
+            alert("DB Migrated! and switch to MongoDB");
+            window.location.reload();
+            }) 
+          })
+      }else{
+        window.location.reload();
+      }
+    }else{
+      // alert("No data in sequential database! To migrate initialize sequential dabase first.");
+      window.location.reload();
+    }
+    
+    
 
   };
 
   const fetchUsers = async () => {
 
-    fetch('http://localhost:5000/api/users')
+    fetch('http://localhost:5000/api/users/'+database)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
           setUsers(jsonResponse.response.users);
-          // set first user as default user
-          setLoggedUser(jsonResponse.response.users[0])
-        },
-        // (error) => {
-        //   setIsLoaded(true);
-        //   setError(error);
-        // }
+        }
       )
   }
 
@@ -83,14 +120,20 @@ function Nav() {
               </Link>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#" onClick={initData}>Init-data</a>
+              <button className="nav-link btn shadow-none" type="button" href="#" onClick={initData}>Init-data</button>
             </li>
             <li className="nav-item">
-              <a className="nav-link" href="#" onClick={clrData}>Clear-data</a>
+              <button className="nav-link btn shadow-none" type="button" href="#" onClick={clrData}>Clear-data</button>
             </li>
-            <li className="nav-item">
+            {/* <li className="nav-item">
               <a className="nav-link" href="#" onClick={migrateData}>Migrate-DB</a>
-            </li>
+            </li> */}
+            <div className="nav-item">
+              <select value={database} onChange={databaseChange} className="form-select">
+                <option value="sql">Sql</option>
+                <option value="nonsql">Non-Sql</option>
+              </select>
+            </div>
             <li className="nav-item dropdown">
               <a className="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 Reports
@@ -122,11 +165,12 @@ function Nav() {
             {/* <Link className="navbar-link" to="/login">
               <button type="button" className="btn btn-default navbar-btn">Login</button>
             </Link> */}
+            {/* ({u.user_role?.role??u.user_role[0].role}) */}
             <div className="">
 
-              <select onChange={userChange} className="form-select">
+              <select value={loggedUserIndex} onChange={userChange} className="form-select">
                 {users.map((u, index) => (
-                  <option key={index} value={index}> {u.first_name} ({u.user_role.role})</option>
+                  <option key={index} value={index}> {u.first_name} </option>
                 ))}
               </select>
             </div>

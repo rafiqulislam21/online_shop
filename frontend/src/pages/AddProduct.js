@@ -1,7 +1,5 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import "../App.css";
-
-import { UserContext } from "../contexts/UserContext";
 
 function AddProduct() {
   useEffect(() => {
@@ -17,7 +15,6 @@ function AddProduct() {
     );
   }, []);
 
-  const [loggedUser, setLoggedUser] = useContext(UserContext);
   const [brands, setBrands] = useState(null);
   const [categories, setCategories] = useState(null);
   const [error, setError] = useState(null);
