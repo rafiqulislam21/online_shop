@@ -1,4 +1,4 @@
-import React, { Component }  from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import './App.css';
 import Nav from './components/Nav';
@@ -8,6 +8,7 @@ import ProductDetail from './pages/ProductDetail';
 import About from "./pages/About";
 import Cart from "./pages/Cart";
 import Report1 from "./pages/Report1";
+import AddProduct from "./pages/AddProduct";
 
 
 import { ShopProvider } from "./contexts/ShopContext";
@@ -29,6 +30,7 @@ function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/report-1" element={<Report1 />} />
                   <Route path="/shop/cart" element={<Cart />} />
+                  <Route path="/product/add" element={<AddProduct />} />
                 </Routes>
                 <Footer />
               </Router>
