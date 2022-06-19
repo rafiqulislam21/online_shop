@@ -162,15 +162,10 @@ function Nav() {
                 </span>
               </button>
             </Link>
-            {/* <Link className="navbar-link" to="/login">
-              <button type="button" className="btn btn-default navbar-btn">Login</button>
-            </Link> */}
-            {/* ({u.user_role?.role??u.user_role[0].role}) */}
             <div className="">
-
               <select value={loggedUserIndex} onChange={userChange} className="form-select">
-                {users.map((u, index) => (
-                  <option key={index} value={index}> {u.first_name} </option>
+                {users?.map((u, index) => (
+                  <option key={index} value={index}> {u?.first_name??"-"} ({u.user_role?.role??u?.role_name??"-"}) </option>
                 ))}
               </select>
             </div>

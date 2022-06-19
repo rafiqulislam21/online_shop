@@ -1,30 +1,53 @@
-# version: "3.7"
+version: "2"
 
-# services:
-#   mysql-db:
-#     container_name: mysql-db
-#     image: mysql:5.7
-#     restart: always
-#     environment:
-#       MYSQL_ROOT_PASSWORD:
-#       MYSQL_DATABASE: online_shop_db
-#     ports:
-#       - '3308:3306'
-#     volumes:
-#         - ./database:/var/lib/mysql
-#     networks:
-#         - backend
-  
-#   backend_flask:
-#     build:
-#       context: ./
-#     ports:
-#       - 5000:5000
-  
-# networks:
-#     backend:
+services:
+  backend:
+    container_name: backend
+    build: .
+    restart: always
+    ports:
+      - "5000:5000"
+    expose:
+      - 5000
+    depends_on:
+      - db
+      - mongodb
+    
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    expose:
+      - 3000
+    stdin_open: true
+    tty: true
 
-# volumes:
-#     app:
-#     database:
+  db:
+    platform: linux/x86_64
+    image: mysql:5.7
+    restart: always
+    container_name: sql
+    environment:
+      MYSQL_DATABASE: online_shop_db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - my-datavolume:/var/lib/mysql
+    expose:
+      - 3306
+    
+  mongodb:
+    image: mongo
+    restart: always
+    container_name: mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: online_shop_db
+    expose:
+      - 27017
 
+volumes:
+  my-datavolume:

@@ -1,5 +1,18 @@
-# Documentaion current state:
+# Documentaion for Docker:
+## How to run program
+- Make sure docker is installed and running
+- Run command `docker-compose up --build` then wait until the docker containers are build.
+- visit `http://localhost:3000/` in your browser, you will see the homepage of the project.
+- To initialize database with sample data click `init-data` from navbar.
+- To Clear database click `clear-data` from navbar.
+- To switch database/ migrate database select `sql/non-sql` dropdown from navbar.
+- To switch user select `user` dropdown from navbar.
 
+
+-------------------------------------------------------------------------------
+---------------------------
+---------------------------
+## Documentaion for non docker:
 ## How to run program
 ### Backend:
 - install `xammp` or any mySql server and start the server
@@ -23,6 +36,3 @@
 ### Recent changes
 - api structure changed sample `localhost:5000/api/.....`
 - main case sql/nonsql part done with forntend
-
-## Todo: 
-- *Docker*

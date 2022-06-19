@@ -9,11 +9,12 @@ function Report1() {
   const [products, setProducts] = useState([]);
   const [error, setError] = useState(null);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [database, setDatabase] = useState(JSON.parse(localStorage.getItem('database')));
 
 
   const fetchItems = async () => {
 
-    fetch('http://localhost:5000/api/report-1')
+    fetch(`http://localhost:5000/api/report-1/${database}`)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
@@ -71,12 +72,12 @@ function Report1() {
     <div className="container">
       <br></br>
       {/* <h1 className="display-6 my-4">Products({products.length})</h1> */}
-      <h4 className="card-title">A report of top rated products by customers over the past year. </h4>
+      <h4 className="card-title">A report of top rated products by customers over the past year.(By Md Rafiqul Islam) </h4>
       <hr></hr>
       {products.map(product => (
         //single product
         <CardHorizontalLight
-          key={product.id}
+          key={product?.id}
           value={product}
         />
       ))}

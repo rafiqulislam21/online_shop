@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+# Models for sql part===============================================================
 class UserRole(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     role = db.Column(db.String(80), nullable=False)
@@ -44,7 +45,7 @@ class Category(db.Model):
 
     products = db.relationship(
         'Product', backref='category', cascade="all, delete-orphan")
-    
+
     parent_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     parents = db.relation('Category', remote_side=[id], uselist=True)
 
