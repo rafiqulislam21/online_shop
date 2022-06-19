@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState } from 'react';
 import '../App.css';
 import ReactStars from "react-rating-stars-component";
-// import {Link} from 'react-router-dom';
 
 function Review(props) {
   const [reviewTxt, setReviewTxt] = useState(props?.value?.description ?? "");
@@ -16,10 +15,6 @@ function Review(props) {
     setReviewTxt(e.target.value);
     // console.log(e.target.value);
   };
-  const resetFun = () => {
-    setReviewTxt("");
-    setReviewStr(0);
-  }
 
   const ratingChanged = (newRating) => {
     setReviewStr(newRating);

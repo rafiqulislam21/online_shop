@@ -42,7 +42,7 @@ function ProductDetail() {
         (jsonResponse) => {
           setIsLoaded(true);
           // console.log(jsonResponse);
-          jsonResponse.response.product.reviews.forEach(async (r) => {
+          (jsonResponse.response.product.reviews || []).forEach(async (r) => {
             r.product_id=parseInt(id);
           });
           setProduct(jsonResponse.response.product);
@@ -199,10 +199,10 @@ function ProductDetail() {
 
       {/* review list section here================= */}
       <div className="col-md-8 col-sm-12">
-        <p className="text-muted pl-4 mb-0">Total {product.reviews.length} reviews</p>
+        <p className="text-muted pl-4 mb-0">Total {product.reviews?.length || 0} reviews</p>
         <hr></hr>
 
-        {product.reviews.map(review => (
+        {(product.reviews || []).map(review => (
           // <h1>{review.user.first_name}</h1>
           <Review
             key={review.created_date}
