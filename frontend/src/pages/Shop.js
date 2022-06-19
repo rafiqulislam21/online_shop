@@ -62,7 +62,7 @@ function Shop() {
           </h4>
         </div>
         <div className="col-auto">
-          {user.user_role === "admin" ? (
+          {user?.user_role === "admin" ? (
             <Link to="/product/add">
               <button type="button" className="btn btn-primary">
                 Add product
