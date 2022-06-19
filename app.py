@@ -1228,48 +1228,62 @@ def categoriesNosql():
     return responseJson
 
 
-@app.route('/api/report-2')
-def report2():
+@app.route('/api/report-2/sql')
+def report2Sql():
     try:
         records = []
         for record in db.engine.execute(
             '''
-            with popular_products AS( 
-                SELECT p.name, sum(po.amount) AS amount, p.category_id, max(o.created_date) AS created_date FROM `order` o 
-                INNER JOIN product_order po ON po.order_id = o.id 
-                INNER JOIN product p ON p.id = po.product_id 
-                WHERE o.created_date BETWEEN '2021-01-01' and DATE_ADD('2021-01-01', interval 1 year) 
-                GROUP BY p.name 
-                ), 
-            popular_categories AS( 
-                SELECT id, c.name, sum(amount) AS amount FROM popular_products 
-                INNER JOIN category c ON c.id = popular_products.category_id 
-                GROUP BY category_id 
-                ORDER BY SUM(amount) DESC 
-                ), 
-            most_popular_product AS( 
-                SELECT popular_products.name, MAX(amount), category_id FROM popular_products 
-                GROUP BY category_id 
-                ), 
-            most_resent_product AS( 
-                SELECT popular_products.name, MAX(created_date) AS created_date, category_id FROM popular_products 
-                GROUP BY category_id 
-                ) 
-                
-            SELECT popular_categories.name AS category_name, popular_categories.amount, 
-            most_popular_product.name AS popular_product_name, most_resent_product.name AS resent_product_name,  
-            most_resent_product.created_date  
-            FROM popular_categories 
-            INNER JOIN most_popular_product ON most_popular_product.category_id = popular_categories.id 
+            with popular_products AS(
+                SELECT p.name, sum(po.amount) AS amount, p.category_id, max(o.created_date) AS created_date FROM `order` o
+                    INNER JOIN product_order po ON po.order_id = o.id
+                    INNER JOIN product p ON p.id = po.product_id
+                    WHERE o.created_date BETWEEN '2021-01-01' and DATE_ADD('2021-01-01', interval 1 year)
+                    GROUP BY p.name
+            ),
+            popular_categories AS(
+                SELECT id, c.name, sum(amount) AS amount FROM popular_products  
+                    INNER JOIN category c ON c.id = popular_products.category_id  
+                    GROUP BY category_id  
+            ),
+            most_popular_product AS(
+                SELECT NAME, category_id FROM popular_products as pp1
+                    WHERE amount = 
+                    (SELECT MAX(amount) FROM popular_products as pp2
+                        WHERE pp1.category_id = pp2.category_id)
+            ),
+            most_resent_product AS(
+                SELECT NAME, category_id, created_date FROM popular_products as pp1
+                    WHERE created_date = 
+                        (SELECT MAX(created_date) AS created_date FROM popular_products as pp2
+                            WHERE pp1.category_id = pp2.category_id)
+            )
+
+            SELECT popular_categories.name AS category_name, popular_categories.amount,
+            most_popular_product.name AS popular_product_name, most_resent_product.name AS resent_product_name, 
+            most_resent_product.created_date 
+            FROM popular_categories
+            INNER JOIN most_popular_product ON most_popular_product.category_id = popular_categories.id
             INNER JOIN most_resent_product ON most_resent_product.category_id = popular_categories.id
+            ORDER BY popular_categories.amount DESC 
+            LIMIT 5
             '''
         ):
-            records.append(record)
+            record_serialized = {
+                "category_name": record[0],
+                "amount": record[1],
+                "popular_product_name": record[2],
+                "resent_product_name": record[3],
+                "created_date": record[4]
+            }
+
+            records.append(record_serialized)
+            print(record[0])
         responseJson = {
             "response": {
                 "status": 1,
                 "message": "list of all product",
-                "products": records
+                "result": records
             }
         }
     except:
@@ -1277,7 +1291,75 @@ def report2():
             "response": {
                 "status": -1,
                 "message": "Product list empty",
-                "products": []
+                "result": []
+            }
+        }
+    return responseJson
+
+@app.route('/api/report-2/nosql')
+def report2Nosql():
+    try:
+        records = []
+        for record in db.engine.execute(
+            '''
+            with popular_products AS(
+                SELECT p.name, sum(po.amount) AS amount, p.category_id, max(o.created_date) AS created_date FROM `order` o
+                    INNER JOIN product_order po ON po.order_id = o.id
+                    INNER JOIN product p ON p.id = po.product_id
+                    WHERE o.created_date BETWEEN '2021-01-01' and DATE_ADD('2021-01-01', interval 1 year)
+                    GROUP BY p.name
+            ),
+            popular_categories AS(
+                SELECT id, c.name, sum(amount) AS amount FROM popular_products  
+                    INNER JOIN category c ON c.id = popular_products.category_id  
+                    GROUP BY category_id  
+            ),
+            most_popular_product AS(
+                SELECT NAME, category_id FROM popular_products as pp1
+                    WHERE amount = 
+                    (SELECT MAX(amount) FROM popular_products as pp2
+                        WHERE pp1.category_id = pp2.category_id)
+            ),
+            most_resent_product AS(
+                SELECT NAME, category_id, created_date FROM popular_products as pp1
+                    WHERE created_date = 
+                        (SELECT MAX(created_date) AS created_date FROM popular_products as pp2
+                            WHERE pp1.category_id = pp2.category_id)
+            )
+
+            SELECT popular_categories.name AS category_name, popular_categories.amount,
+            most_popular_product.name AS popular_product_name, most_resent_product.name AS resent_product_name, 
+            most_resent_product.created_date 
+            FROM popular_categories
+            INNER JOIN most_popular_product ON most_popular_product.category_id = popular_categories.id
+            INNER JOIN most_resent_product ON most_resent_product.category_id = popular_categories.id
+            ORDER BY popular_categories.amount DESC 
+            LIMIT 5
+            '''
+        ):
+            record_serialized = {
+                "category_name": record[0],
+                "amount": record[1],
+                "popular_product_name": record[2],
+                "resent_product_name": record[3],
+                "created_date": record[4]
+            }
+
+            records.append(record_serialized)
+            print(record[0])
+        responseJson = {
+            "response": {
+                "status": 1,
+                "message": "list of all product",
+                "result": records
+            }
+        }
+    except:
+        responseJson = {
+            "response": {
+                "status": -1,
+                "message": "Product list empty",
+                "result": []
             }
         }
     return responseJson
