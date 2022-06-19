@@ -20,7 +20,7 @@
 - activate virtual environment command (windows): `.\venv\Scripts\activate`
 - activate virtual environment command (linux/mac): `source venv/bin/activate`
 - install required packages: `pip install -r requirements.txt`
-- run command (to start server): `python server.py`
+- run command (to start server): `python app.py`
 - To initialize database with sample data visit this url (or there is button in frontend): 
     - sql: `localhost:5000/api/data-init`
 - To clear database visit this url (or there is button in frontend):                 

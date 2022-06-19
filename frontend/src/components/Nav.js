@@ -55,8 +55,6 @@ function Nav() {
   }
 
   const userChange = (e) => {
-    // console.log(users[e.target.value])
-    // setLoggedUser(users[e.target.value]);
     localStorage.setItem("loggedUser", JSON.stringify(users[e.target.value]));
     localStorage.setItem("loggedUserIndex", JSON.stringify(e.target.value));
     const userLocal = JSON.parse(localStorage.getItem("loggedUser"));
@@ -69,7 +67,6 @@ function Nav() {
   };
 
   const databaseChange = (e) => {
-    // console.log(users[e.target.value])
     localStorage.setItem("database", JSON.stringify(e.target.value));
     const dbLocal = JSON.parse(localStorage.getItem("database"));
     if (dbLocal) {
@@ -120,11 +117,6 @@ function Nav() {
         </button>
         <div className="collapse navbar-collapse" id="navbarText">
           <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            <li className="nav-item">
-              <Link className="nav-link" to="/about">
-                About
-              </Link>
-            </li>
             <li className="nav-item">
               <button
                 className="nav-link btn shadow-none"

@@ -36,9 +36,8 @@ ProductCollection = mongo_db['product']
 ReviewCollection = mongo_db['review']
 BrandCollection = mongo_db['brand']
 OrderCollection = mongo_db['order']
+
 # ======================generate random data api start====================================
-
-
 # initialisation data for sql database api---------
 @app.route('/api/data-init')
 def generate_random_data():
@@ -573,7 +572,6 @@ def reviewCreateSql():
                 )
                 db.session.add(single_review)
                 db.session.commit()
-                # app.logger.info(request_data)
 
                 responseJson = {
                     "response": {
@@ -598,11 +596,7 @@ def reviewCreateNoSql():
             # data from post request
             request_data = request.get_json()
 
-            # check if user already review this product
             alreadyReviewed = False
-            # alreadyReviewed = Review.query.filter_by(user_id=request_data['user_id'], product_id=request_data['product_id']).first() is not None
-            # app.logger.info("=======================================")
-            # app.logger.info(request_data)
             if alreadyReviewed:
                 responseJson = {
                     "response": {
@@ -769,62 +763,36 @@ def reviewDeleteNoSql(id):
 def report1sql():
     current_time = datetime.datetime.now()
     one_year_ago = current_time - datetime.timedelta(days=365)
-
+    # SELECT *, (SELECT AVG(`rating`) FROM `review` WHERE product.id = review.product_id) AS `rating` FROM `product` WHERE `created_date` >= '2021/07/01 23:59:59.999' and `created_date` <= '2022/07/01 23:59:59.999' ORDER BY `rating` DESC;
     try:
-        # get products that added between now and one year ago from database
-        product_list_obj = Product.query.filter(
-            Product.created_date > one_year_ago).all()
-        # serialize data to json
-        product_list_serialized = []
-        for p in product_list_obj:
-            # query to find averge value of the product
-            rating_avg = db.session.query(db.func.avg(Review.rating)).filter(
-                Review.product_id == p.id).scalar()
-            if rating_avg == None:
-                rating_avg = 0.0
-
-            review_list = []
-            for r in p.reviews:
-                r_item = {
-                    "id": r.id,
-                    "description": r.description,
-                    "rating": r.rating,
-                    "created_date": r.created_date,
-                    "user_id": r.user_id,
-                    "product_id": r.product_id
-                }
-                review_list.append(r_item)
-
-            category_serialized = {
-                "id": p.category.id,
-                "name": p.category.name,
-                "description": p.category.description,
-            }
-            brand_serialized = {
-                "id": p.brand.id,
-                "name": p.brand.name,
-                "description": p.brand.description,
-            }
-
-            p_item = {
-                "id": p.id,
-                "name": p.name,
-                "description": p.description,
-                "price": p.price,
-                "is_active": p.is_active,
-                "created_date": p.created_date,
-                "reviews": review_list,
-                "brand_id": p.brand_id,
-                "category_id": p.category_id,
-                "category": category_serialized,
-                "brand": brand_serialized,
-                "rating_avg": rating_avg
-            }
-            product_list_serialized.append(p_item)
-
-        # sort product list by averge rating decending order
-        product_list_serialized.sort(
-            key=lambda x: x["rating_avg"], reverse=True)
+        records = db.engine.execute('''SELECT *, (SELECT AVG(rating) FROM `review` WHERE product.id = review.product_id) AS rating, 
+(SELECT name FROM `category` WHERE product.category_id=category.id) AS category_name,
+(SELECT name FROM `brand` WHERE product.brand_id=brand.id) AS brand_name 
+FROM `product` WHERE created_date >= '2021/07/01 23:59:59.999' and 
+        created_date <= '2022/07/01 23:59:59.999' ORDER BY rating DESC;''')
+        
+        product_list_serialized=[]
+        df_products = pd.DataFrame(records)
+        product_list = json.loads(
+            df_products.to_json(orient="records", default_handler=str))
+        if product_list is None:
+            product_list = []
+        else:
+            for row in product_list:
+             product_list_serialized.append ({
+                "id":row['0'],
+                "name":row['1'],
+                "description":row['2'],
+                "price":row['3'],
+                "is_active":row['4'],
+                "created_date":row['5'],
+                "brand_id":row['6'],
+                "category_id":row['7'],
+                "rating_avg":row['8'],
+                "category_name":row['9'],
+                "brand_name":row['10'],
+                
+                })
         responseJson = {
             "response": {
                 "status": 1,
@@ -885,6 +853,7 @@ def report1nonsql():
             }
         }
     return responseJson
+
 
 # -----------------admin--------------
 # request demo
