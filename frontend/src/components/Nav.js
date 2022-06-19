@@ -158,7 +158,7 @@ function Nav() {
                 <option value="nosql">NoSql</option>
               </select>
             </div>
-            {loggedUser.user_role === "admin" ? (
+            {loggedUser?.user_role === "admin" ? (
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -203,7 +203,7 @@ function Nav() {
             <div className="">
               <select value={loggedUserIndex} onChange={userChange} className="form-select">
                 {users?.map((u, index) => (
-                  <option key={index} value={index}> {" "}{u?.first_name??"-"} ({u.user_role?.role??u?.role_name??"-"}{" "}) </option>
+                  <option key={index} value={index}> {" "}{u?.first_name??"-"} ({u.user_role??"-"}{" "}) </option>
                 ))}
               </select>
             </div>

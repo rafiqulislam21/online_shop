@@ -8,6 +8,7 @@ import ProductDetail from './pages/ProductDetail';
 import About from "./pages/About";
 import Cart from "./pages/Cart";
 import Report1 from "./pages/Report1";
+import Report2 from "./pages/Report2";
 import AddProduct from "./pages/AddProduct";
 
 
@@ -29,6 +30,7 @@ function App() {
                   <Route path="/shop/:id" element={<ProductDetail />} />
                   <Route path="/about" element={<About />} />
                   <Route path="/report-1" element={<Report1 />} />
+                  <Route path="/report-2" element={<Report2 />} />
                   <Route path="/shop/cart" element={<Cart />} />
                   <Route path="/product/add" element={<AddProduct />} />
                 </Routes>

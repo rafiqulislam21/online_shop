@@ -10,11 +10,15 @@ function AddProduct() {
   const [database, setDatabase] = useState(
     JSON.parse(localStorage.getItem("database"))
   );
+  const [isLoaded, setIsLoaded] = useState(false);
 
   let navigate = useNavigate();
 
   useEffect(() => {
-    fetchItems();
+    fetchItems()
+      .then(() =>
+        setIsLoaded(true)
+      );
   }, []);
 
   useEffect(() => {
@@ -90,6 +94,24 @@ function AddProduct() {
       result = findCategoryTree(category.parent_id, result);
     }
     return result;
+  };
+
+  if (error) {
+    return (
+      <div className="container p-4">
+        <div className="alert alert-danger" role="alert">
+          Opps! Something went wrong.
+        </div>
+      </div>
+    );
+  } else if (!isLoaded) {
+    return (
+      <div className="d-flex justify-content-center p-4">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
   };
 
   return (
