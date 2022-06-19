@@ -8,6 +8,20 @@ function Nav() {
   const [selectedProducts, setSelectedProducts] = useContext(CartContext);
   const [products, setProducts] = useContext(ShopContext);
   const [users, setUsers] = useState([]);
+  var u = localStorage.getItem('loggedUser');
+  var db = localStorage.getItem("database");
+  var i = localStorage.getItem("loggedUserIndex");
+    if (db == null){
+      localStorage.setItem("database", JSON.stringify("sql"));
+    }
+    if(u == null){
+      localStorage.setItem("loggedUser", JSON.stringify({}));
+      
+    }
+    if(i == null){
+      localStorage.setItem("loggedUserIndex", JSON.stringify(1));
+    }
+
   const [database, setDatabase] = useState(
     JSON.parse(localStorage.getItem("database"))
   );
