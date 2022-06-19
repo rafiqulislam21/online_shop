@@ -11,7 +11,7 @@ RUN pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted
 COPY config.py /backend
 COPY migration.py /backend
 COPY mysql_connector.py /backend
-COPY __pycache__ /backend
+# COPY __pycache__ /backend
 COPY app.py /backend
 
 # CMD python server.py
