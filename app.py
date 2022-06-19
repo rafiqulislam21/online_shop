@@ -1278,7 +1278,7 @@ def report2Sql():
             }
 
             records.append(record_serialized)
-            print(record[0])
+
         responseJson = {
             "response": {
                 "status": 1,
@@ -1300,53 +1300,92 @@ def report2Sql():
 def report2Nosql():
     try:
         records = []
-        for record in db.engine.execute(
-            '''
-            with popular_products AS(
-                SELECT p.name, sum(po.amount) AS amount, p.category_id, max(o.created_date) AS created_date FROM `order` o
-                    INNER JOIN product_order po ON po.order_id = o.id
-                    INNER JOIN product p ON p.id = po.product_id
-                    WHERE o.created_date BETWEEN '2021-01-01' and DATE_ADD('2021-01-01', interval 1 year)
-                    GROUP BY p.name
-            ),
-            popular_categories AS(
-                SELECT id, c.name, sum(amount) AS amount FROM popular_products  
-                    INNER JOIN category c ON c.id = popular_products.category_id  
-                    GROUP BY category_id  
-            ),
-            most_popular_product AS(
-                SELECT NAME, category_id FROM popular_products as pp1
-                    WHERE amount = 
-                    (SELECT MAX(amount) FROM popular_products as pp2
-                        WHERE pp1.category_id = pp2.category_id)
-            ),
-            most_resent_product AS(
-                SELECT NAME, category_id, created_date FROM popular_products as pp1
-                    WHERE created_date = 
-                        (SELECT MAX(created_date) AS created_date FROM popular_products as pp2
-                            WHERE pp1.category_id = pp2.category_id)
-            )
 
-            SELECT popular_categories.name AS category_name, popular_categories.amount,
-            most_popular_product.name AS popular_product_name, most_resent_product.name AS resent_product_name, 
-            most_resent_product.created_date 
-            FROM popular_categories
-            INNER JOIN most_popular_product ON most_popular_product.category_id = popular_categories.id
-            INNER JOIN most_resent_product ON most_resent_product.category_id = popular_categories.id
-            ORDER BY popular_categories.amount DESC 
-            LIMIT 5
-            '''
-        ):
+        query_result = list(OrderCollection.aggregate([
+            {
+                "$match": {"created_date": {
+                    "$gte": datetime.datetime(2021, 1, 1), "$lte": datetime.datetime(2021, 12, 31)}}
+            },
+            {
+                "$project" : {"created_date": 1, "products": 1}
+            },
+            {
+                "$unwind": "$products"
+            },
+            {
+                "$lookup": {
+                    "from": "product",
+                    "pipeline": [
+                        { 
+                            "$project": {
+                                "_id": 0,
+                                "category": {"$arrayElemAt": ["$category", -1]}
+                            },
+                        }
+                    ],
+                    "localField": "products._id",
+                    "foreignField": "_id",
+                    "as": "category"
+                }
+            },
+            {
+                "$unwind": "$category"
+            },
+            {
+                "$project" : {
+                    "created_date": 1, 
+                    "product_name": "$products.name",
+                    "amount": "$products.amount",
+                    "category_name": "$category.category.name"
+                    }
+            },
+            {
+                "$sort":{"created_date": -1}
+            },
+            {
+                "$group":{
+                    "_id": {"category_name": "$category_name"},
+                    "total_amount": {"$sum":"$amount"},
+                    "products": {"$push": {"name": "$product_name", "amount": "$amount"}},
+                    "most_recent_product": {"$first": "$product_name"},
+                    "most_recent_date": {"$first": "$created_date"}
+                }
+            },
+            {
+                "$unwind": "$products"
+            },
+            {
+                "$sort":{"products.amount":-1}
+            },
+            {
+                "$group":{
+                    "_id": "$_id.category_name",
+                    "total_amount": {"$first":"$total_amount"},
+                    "most_popular_product": {"$first": "$products.name"},
+                    "most_recent_product": {"$first": "$most_recent_product"},
+                    "most_recent_date": {"$first": "$most_recent_date"}
+                }
+            },
+            {
+                "$sort":{"total_amount":-1}
+            },
+            {
+                "$limit": 5
+            }
+        ]))
+
+        for record in query_result:
             record_serialized = {
-                "category_name": record[0],
-                "amount": record[1],
-                "popular_product_name": record[2],
-                "resent_product_name": record[3],
-                "created_date": record[4]
+                "category_name": record["_id"],
+                "amount": record["total_amount"],
+                "popular_product_name": record["most_popular_product"],
+                "resent_product_name": record["most_recent_product"],
+                "created_date": record["most_recent_date"]
             }
 
             records.append(record_serialized)
-            print(record[0])
+            
+
         responseJson = {
             "response": {
                 "status": 1,
@@ -1354,11 +1393,11 @@ def report2Nosql():
                 "result": records
             }
         }
-    except:
+    except BaseException as err:
         responseJson = {
             "response": {
                 "status": -1,
-                "message": "Product list empty",
+                "message": err,
                 "result": []
             }
         }

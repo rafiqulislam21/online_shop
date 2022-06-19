@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../App.css";
 
-function Report1() {
+function Report2() {
   useEffect(() => {
     fetchItems();
   }, []);
@@ -67,7 +67,7 @@ function Report1() {
         <tbody>
           {result.map((record) => (
             <tr>
-              <td>{record.category_name}</td>
+              <td key="record.category_name">{record.category_name}</td>
               <td>{record.amount}</td>
               <td>{record.popular_product_name}</td>
               <td>{record.resent_product_name}</td>
@@ -80,4 +80,4 @@ function Report1() {
   );
 }
 
-export default Report1;
+export default Report2;
