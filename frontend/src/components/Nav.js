@@ -19,7 +19,7 @@ function Nav() {
       
     }
     if(i == null){
-      localStorage.setItem("loggedUserIndex", JSON.stringify(1));
+      localStorage.setItem("loggedUserIndex", JSON.stringify(-1));
     }
 
   const [database, setDatabase] = useState(
@@ -194,6 +194,7 @@ function Nav() {
             </Link>
             <div className="">
               <select value={loggedUserIndex} onChange={userChange} className="form-select">
+              <option value={-1}> {" "}{"<<Select User>>"}{" "} </option>
                 {users?.map((u, index) => (
                   <option key={index} value={index}> {" "}{u?.first_name??"-"} ({u.user_role??"-"}{" "}) </option>
                 ))}

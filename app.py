@@ -769,7 +769,7 @@ def report1sql():
         records = db.engine.execute('''SELECT *, (SELECT AVG(rating) FROM `review` WHERE product.id = review.product_id) AS rating, 
 (SELECT name FROM `category` WHERE product.category_id=category.id) AS category_name,
 (SELECT name FROM `brand` WHERE product.brand_id=brand.id) AS brand_name 
-FROM `product` WHERE created_date >= '2021/07/01 23:59:59.999' and 
+FROM `product` WHERE created_date >= '2021/07/01 23:59:59.999' AND 
         created_date <= '2022/07/01 23:59:59.999' ORDER BY rating DESC;''')
         
         product_list_serialized=[]
@@ -1421,5 +1421,5 @@ if __name__ == '__main__':
     db.init_app(app)
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host="localhost", ssl_context=('cert.pem', 'key.pem'))
+    app.run(debug=True, host="localhost", ssl_context=('.frontend/cert.pem', '.frontend/key.pem'))
     

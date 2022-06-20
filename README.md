@@ -2,7 +2,8 @@
 ## How to run program
 - Make sure docker is installed and running
 - Run command `docker-compose up --build` then wait until the docker containers are build.
-- visit `http://localhost:3000/` in your browser, you will see the homepage of the project.
+- visit this url `https://localhost:5000/` and add this url as trusted url, otherwise frontend will show error. we used self signed ssl certificate that's why url should be marked as trusted url first.
+- visit `https://localhost:3000/` in your browser, you will see the homepage of the project.
 - To initialize database with sample data click `init-data` from navbar.
 - To Clear database click `clear-data` from navbar.
 - To switch database/ migrate database select `sql/non-sql` dropdown from navbar.
