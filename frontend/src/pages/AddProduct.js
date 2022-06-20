@@ -38,7 +38,7 @@ function AddProduct() {
   }, [brands, categories]);
 
   const fetchItems = async () => {
-    fetch("http://localhost:5000/api/brands/" + database)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/brands/` + database)
       .then((res) => res.json())
       .then(
         (jsonResponse) => {
@@ -48,7 +48,7 @@ function AddProduct() {
           setError(error);
         }
       );
-    fetch("http://localhost:5000/api/categories/" + database)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/categories/` + database)
       .then((res) => res.json())
       .then(
         (jsonResponse) => {
@@ -70,7 +70,7 @@ function AddProduct() {
   const submitHandler = (event) => {
     event.preventDefault();
     console.log(formValue);
-    fetch("http://localhost:5000/api/admin/products/add/" + database, {
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/admin/products/add/` + database, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

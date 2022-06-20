@@ -19,7 +19,7 @@ function Shop() {
   const [database, setDatabase] = useState(JSON.parse(localStorage.getItem("database")));
 
   const fetchItems = async () => {
-    fetch("http://localhost:5000/api/products/" + database)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/products/` + database)
       .then((res) => res.json())
       .then(
         (jsonResponse) => {

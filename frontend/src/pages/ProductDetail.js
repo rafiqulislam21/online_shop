@@ -36,7 +36,7 @@ function ProductDetail() {
   };
 
   const fetchItems = async () => {
-    fetch(`http://localhost:5000/api/products/${id}/${database}`)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/products/${id}/${database}`)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
@@ -55,7 +55,7 @@ function ProductDetail() {
   }
   const itemAvailable = param => async () => {
     var productId = product.id
-    fetch(`http://localhost:5000/api/products/${productId}/available`)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/products/${productId}/available`)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
@@ -87,7 +87,7 @@ function ProductDetail() {
         "product_id": id
       })
     };
-    fetch(`http://localhost:5000/api/reviews/create/${database}`, requestOptions)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/reviews/create/${database}`, requestOptions)
       .then(res => res.json())
       .then(
         (jsonResponse) => {

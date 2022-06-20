@@ -14,7 +14,7 @@ function Report1() {
 
   const fetchItems = async () => {
 
-    fetch(`http://localhost:5000/api/report-1/${database}`)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/report-1/${database}`)
       .then(res => res.json())
       .then(
         (jsonResponse) => {

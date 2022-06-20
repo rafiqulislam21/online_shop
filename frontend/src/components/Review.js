@@ -31,7 +31,7 @@ function Review(props) {
         "product_id": props?.value?.product_id,
       })
     };
-    fetch(`http://localhost:5000/api/reviews/${reviewId}/${database}`, requestOptions)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/reviews/${reviewId}/${database}`, requestOptions)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
@@ -58,7 +58,7 @@ function Review(props) {
         "last_name": loggedUser.last_name
       })
     };
-    fetch(`http://localhost:5000/api/reviews/${reviewId}/${database}`, requestOptions)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/reviews/${reviewId}/${database}`, requestOptions)
       .then(res => res.json())
       .then(
         (jsonResponse) => {
