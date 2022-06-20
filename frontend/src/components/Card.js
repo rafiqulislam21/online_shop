@@ -8,7 +8,7 @@ const Card = (props) => {
 
     const itemAvailable = param => async () => {
         var productId = props.value.id
-        fetch(`http://localhost:5000/api/products/${productId}/available`)
+        fetch(`${process.env.REACT_APP_BASE_URL}/api/products/${productId}/available`)
             .then(res => res.json())
             .then(
                 (jsonResponse) => {

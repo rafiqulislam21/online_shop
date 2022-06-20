@@ -65,7 +65,7 @@ function Cart() {
           "products": orderProductList
         })
       };
-      fetch('http://localhost:5000/api/place-order', requestOptions)
+      fetch(`${process.env.REACT_APP_BASE_URL}/api/place-order`, requestOptions)
         .then(res => res.json())
         .then(
           (jsonResponse) => {

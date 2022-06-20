@@ -37,7 +37,7 @@ function Nav() {
   }, []);
 
   function initData() {
-    fetch("http://localhost:5000/api/data-init", { method: "GET" }).then(
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/data-init`, { method: "GET" }).then(
       (json) => {
         alert("Data Initiallized!");
         window.location.reload();
@@ -46,7 +46,7 @@ function Nav() {
   }
 
   function clrData() {
-    fetch("http://localhost:5000/api/data-clear/" + database, {
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/data-clear/` + database, {
       method: "GET",
     }).then((json) => {
       alert("Data Cleared!");
@@ -75,8 +75,8 @@ function Nav() {
 
     if (products?.length > 0) {
       if (dbLocal === "nosql") {
-        fetch("http://localhost:5000/api/data-clear/nosql").then((json) => {
-          fetch("http://localhost:5000/api/migrate").then((json) => {
+        fetch(`${process.env.REACT_APP_BASE_URL}/api/data-clear/nosql`).then((json) => {
+          fetch(`${process.env.REACT_APP_BASE_URL}/api/migrate`).then((json) => {
             alert("DB Migrated! and switch to MongoDB");
             window.location.reload();
           });
@@ -91,7 +91,7 @@ function Nav() {
   };
 
   const fetchUsers = async () => {
-    fetch("http://localhost:5000/api/users/" + database)
+    fetch(`${process.env.REACT_APP_BASE_URL}/api/users/` + database)
       .then((res) => res.json())
       .then((jsonResponse) => {
         setUsers(jsonResponse.response.users);
