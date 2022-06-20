@@ -5,6 +5,7 @@ from logging.config import dictConfig
 import pymongo
 from bson.objectid import ObjectId
 
+
 import pandas as pd
 from faker import Faker
 from collections import defaultdict
@@ -818,25 +819,36 @@ def report1nonsql():
 
     try:
         # get products that added between now and one year ago from database
-        # serialize data to json
         product_list_serialized = []
-        product_list_obj = ProductCollection.find( {'created_date': {'$gte': one_year_ago, '$lt': current_time}})
+        product_list_obj = ProductCollection.aggregate([
+                                                {
+                                                    '$match': {
+                                                        'created_date': {
+                                                            '$gte': one_year_ago, 
+                                                            '$lt': current_time
+                                                        }
+                                                    }
+                                                }, {
+                                                    '$addFields': {
+                                                        'rating_avg': {
+                                                            '$avg': '$reviews.rating'
+                                                        }
+                                                    }
+                                                }, {
+                                                    '$sort': {
+                                                        'rating_avg': -1
+                                                    }
+                                                }
+                                            ])
 
         df_products = pd.DataFrame(product_list_obj)
         df_products.rename(columns={'_id': 'id'}, inplace=True)
+        
         product_list_serialized = json.loads(
             df_products.to_json(orient="records", default_handler=str))
         if product_list_serialized is None:
             product_list_serialized = []
-        
-        # serialize data to json
-        for p in product_list_serialized:
-            rating_avg = sum([i['rating'] for i in p['reviews']]) / len(p['reviews'])
-            p["rating_avg"]= rating_avg
-
-        # sort product list by averge rating decending order
-        product_list_serialized.sort(
-            key=lambda x: x["rating_avg"], reverse=True)
+                
         responseJson = {
             "response": {
                 "status": 1,
