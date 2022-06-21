@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from flask_cors import CORS
 from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
@@ -813,7 +814,7 @@ FROM `product` WHERE created_date >= '2021/07/01 23:59:59.999' AND
 
 
 @app.route('/api/report-1/nosql')
-def report1nonsql():
+def report1onsql():
     current_time = datetime.datetime.now()
     one_year_ago = current_time - datetime.timedelta(days=365)
 
@@ -1268,6 +1269,7 @@ def report2Sql():
             }
         }
     except BaseException as e:
+        logger.error(e)
         responseJson = {
             "response": {
                 "status": -1,
