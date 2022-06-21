@@ -24,3 +24,4 @@ htmlcov/
 *,cover
 
 node_modules/
+/.vs
