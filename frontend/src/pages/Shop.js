@@ -41,6 +41,11 @@ function Shop() {
         <div className="alert alert-danger" role="alert">
           Opps! Something went wrong.
         </div>
+        <div className="alert alert-warning" role="alert">
+          Visiting this link and save this url as truested may fix the error:
+          <a href={`${process.env.REACT_APP_BASE_URL}/`}>Click here!</a>
+          After that revisit this website.
+        </div>
       </div>
     );
   } else if (!isLoaded) {
