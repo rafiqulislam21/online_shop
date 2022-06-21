@@ -1267,11 +1267,11 @@ def report2Sql():
                 "result": records
             }
         }
-    except:
+    except BaseException as e:
         responseJson = {
             "response": {
                 "status": -1,
-                "message": "Product list empty",
+                "message": e,
                 "result": []
             }
         }
