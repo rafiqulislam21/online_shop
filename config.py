@@ -2,7 +2,8 @@ import mysql.connector
 
 # create empty mysql database
 mysql_config = {'user': 'user', 'password': 'password',
-                'host': 'sql', 'port': '3306', 'database': 'online_shop_db'}
+                'host': 'sql', 'port': '3306', 'database': 'online_shop_db',
+                'auth_plugin': 'mysql_native_password'}
 mydb = mysql.connector.connect(**mysql_config)
 cursor = mydb.cursor()
 cursor.execute("DROP database IF EXISTS online_shop_db")

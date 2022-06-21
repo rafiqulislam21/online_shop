@@ -801,11 +801,11 @@ FROM `product` WHERE created_date >= '2021/07/01 23:59:59.999' AND
                 "products": product_list_serialized
             }
         }
-    except:
+    except BaseException as err:
         responseJson = {
             "response": {
                 "status": -1,
-                "message": "Product list empty",
+                "message": str(err),
                 "products": []
             }
         }
@@ -1220,7 +1220,7 @@ def report2Sql():
                     INNER JOIN product_order po ON po.order_id = o.id
                     INNER JOIN product p ON p.id = po.product_id
                     WHERE o.created_date BETWEEN '2021-01-01' and DATE_ADD('2021-01-01', interval 1 year)
-                    GROUP BY p.name
+                    GROUP BY p.name, p.category_id
             ),
             popular_categories AS(
                 SELECT id, c.name, sum(amount) AS amount FROM popular_products  
@@ -1271,7 +1271,7 @@ def report2Sql():
         responseJson = {
             "response": {
                 "status": -1,
-                "message": e,
+                "message": str(e),
                 "result": []
             }
         }
@@ -1378,7 +1378,7 @@ def report2Nosql():
         responseJson = {
             "response": {
                 "status": -1,
-                "message": err,
+                "message": str(err),
                 "result": []
             }
         }
