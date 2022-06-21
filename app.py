@@ -767,11 +767,8 @@ def report1sql():
     one_year_ago = current_time - datetime.timedelta(days=365)
     # SELECT *, (SELECT AVG(`rating`) FROM `review` WHERE product.id = review.product_id) AS `rating` FROM `product` WHERE `created_date` >= '2021/07/01 23:59:59.999' and `created_date` <= '2022/07/01 23:59:59.999' ORDER BY `rating` DESC;
     try:
-        records = db.engine.execute('''SELECT *, (SELECT AVG(rating) FROM `review` WHERE product.id = review.product_id) AS rating, 
-(SELECT name FROM `category` WHERE product.category_id=category.id) AS category_name,
-(SELECT name FROM `brand` WHERE product.brand_id=brand.id) AS brand_name 
-FROM `product` WHERE created_date >= '2021/07/01 23:59:59.999' AND 
-        created_date <= '2022/07/01 23:59:59.999' ORDER BY rating DESC;''')
+        records = db.engine.execute('''SELECT id, name, description, price, created_date, (SELECT AVG(rating) FROM `review` WHERE product.id = review.product_id) AS rating 
+            FROM `product` WHERE created_date >= '2021/07/01 23:59:59.999' AND created_date <= '2022/07/01 23:59:59.999' ORDER BY rating DESC;''')
         
         product_list_serialized=[]
         df_products = pd.DataFrame(records)
@@ -786,13 +783,8 @@ FROM `product` WHERE created_date >= '2021/07/01 23:59:59.999' AND
                 "name":row['1'],
                 "description":row['2'],
                 "price":row['3'],
-                "is_active":row['4'],
-                "created_date":row['5'],
-                "brand_id":row['6'],
-                "category_id":row['7'],
-                "rating_avg":row['8'],
-                "category_name":row['9'],
-                "brand_name":row['10'],
+                "created_date":row['4'],
+                "rating_avg":row['5']
                 
                 })
         responseJson = {
@@ -829,13 +821,25 @@ def report1onsql():
                                                             '$lt': current_time
                                                         }
                                                     }
-                                                }, {
+                                                }, 
+                                                {
                                                     '$addFields': {
                                                         'rating_avg': {
                                                             '$avg': '$reviews.rating'
                                                         }
                                                     }
-                                                }, {
+                                                }, 
+                                                {
+                                                    '$project': {
+                                                        '_id': '$_id', 
+                                                        'name': '$name', 
+                                                        'description': '$description', 
+                                                        'rating_avg': '$rating_avg', 
+                                                        'price': '$price', 
+                                                        'created_date': '$created_date'
+                                                    }
+                                                },
+                                                {
                                                     '$sort': {
                                                         'rating_avg': -1
                                                     }
