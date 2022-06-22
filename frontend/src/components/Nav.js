@@ -37,18 +37,25 @@ function Nav() {
   }, []);
 
   function initData() {
-    fetch(`${process.env.REACT_APP_BASE_URL}/api/data-init`, { method: "GET" }).then(
-      (json) => {
-        alert("Data Initiallized!");
-        window.location.reload();
-      }
-    );
+    if(database === "nosql"){
+      alert("You can only Initiallize data in SQL mode. Please switch database to SQL");
+    }else{
+      fetch(`${process.env.REACT_APP_BASE_URL}/api/data-init`, { method: "GET" }).then(
+        (json) => {
+          alert("Data Initiallized!");
+          window.location.reload();
+        }
+      );
+    }
+    
   }
 
   function clrData() {
     fetch(`${process.env.REACT_APP_BASE_URL}/api/data-clear/` + database, {
       method: "GET",
     }).then((json) => {
+      localStorage.setItem("loggedUser", JSON.stringify({}));  
+      localStorage.setItem("loggedUserIndex", JSON.stringify(-1));
       alert("Data Cleared!");
       window.location.reload();
     });

@@ -765,7 +765,7 @@ def reviewDeleteNoSql(id):
 def report1sql():
     current_time = datetime.datetime.now()
     one_year_ago = current_time - datetime.timedelta(days=365)
-    # SELECT *, (SELECT AVG(`rating`) FROM `review` WHERE product.id = review.product_id) AS `rating` FROM `product` WHERE `created_date` >= '2021/07/01 23:59:59.999' and `created_date` <= '2022/07/01 23:59:59.999' ORDER BY `rating` DESC;
+    
     try:
         records = db.engine.execute('''SELECT id, name, description, price, created_date, (SELECT AVG(rating) FROM `review` WHERE product.id = review.product_id) AS rating 
             FROM `product` WHERE created_date >= '2021/07/01 23:59:59.999' AND created_date <= '2022/07/01 23:59:59.999' ORDER BY rating DESC;''')
